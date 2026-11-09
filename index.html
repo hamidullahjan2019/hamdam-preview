@@ -239,8 +239,8 @@ h2.t { font-family: var(--f-display); font-weight: 800; font-size: 20px; margin:
 .meprof .ph { position: relative; width: 78px; height: 78px; border-radius: 50%; overflow: hidden; flex: none; border: 3px solid var(--brand); }
 .vstate { display: inline-flex; gap: 6px; align-items: center; font-size: 13px; font-weight: 700; padding: 3px 10px; border-radius: 999px; background: var(--chip); }
 .vstate.ok { background: color-mix(in srgb, var(--accent) 16%, var(--surface)); color: var(--accent); }
-.goldcard { border-radius: 8px; padding: 16px; color: #3a2a08; background: linear-gradient(135deg, #F6E8C2, #E8CC8A); display: grid; gap: 4px; box-shadow: var(--shadow-sm); }
-.goldcard b { font-family: var(--f-display); font-size: 17px; } .esec { border: 1px solid var(--line); border-radius: 10px; margin-top: 10px; overflow: hidden; background: var(--surface); } .esec-h { width: 100%; display: flex; align-items: center; gap: 8px; padding: 12px; background: none; border: 0; font: inherit; font-weight: 700; font-size: 15px; cursor: pointer; text-align: left; } .esec-h .esec-ic { font-size: 18px; } .esec-h .esec-ch { margin-left: auto; color: var(--muted); display: inline-block; transition: transform .15s; } .esec.open .esec-ch { transform: rotate(180deg); } .esec-b { display: none; padding: 0 12px 12px; } .langbox { max-height: 200px; overflow-y: auto; padding-right: 4px; } .esec.open .esec-b { display: block; }
+.goldcard { border-radius: 8px; padding: 12px; color: #3a2a08; background: linear-gradient(135deg, #F6E8C2, #E8CC8A); display: grid; gap: 4px; box-shadow: var(--shadow-sm); }
+.goldcard b { font-family: var(--f-display); font-size: 15px; } .esec { border: 1px solid var(--line); border-radius: 10px; margin-top: 10px; overflow: hidden; background: var(--surface); } .esec-h { width: 100%; display: flex; align-items: center; gap: 8px; padding: 12px; background: none; border: 0; font: inherit; font-weight: 700; font-size: 15px; cursor: pointer; text-align: left; } .esec-h .esec-ic { font-size: 18px; } .esec-h .esec-ch { margin-left: auto; color: var(--muted); display: inline-block; transition: transform .15s; } .esec.open .esec-ch { transform: rotate(180deg); } .esec-b { display: none; padding: 0 12px 12px; } .langbox { max-height: 200px; overflow-y: auto; padding-right: 4px; } .esec.open .esec-b { display: block; }
 
 /* onboarding + match */
 .onb { position: absolute; inset: 0; z-index: 50; background: var(--bg); display: flex; flex-direction: column; padding-block: 12px 16px; }
@@ -248,7 +248,7 @@ h2.t { font-family: var(--f-display); font-weight: 800; font-size: 20px; margin:
 .dots { display: flex; gap: 6px; justify-content: center; padding: 6px 0 12px; }
 .dots i { width: 22px; height: 5px; border-radius: 99px; background: var(--line); }
 .dots i.on { background: var(--brand); }
-.welcome { display: grid; gap: 14px; justify-items: center; text-align: center; padding: 6vh 0 8px; background: radial-gradient(260px 200px at 50% 12%, color-mix(in srgb, var(--brand) 14%, transparent), transparent 70%); }
+.welcome { display: grid; gap: 14px; justify-items: center; align-content: center; text-align: center; padding: 6vh 16px 8px; min-height: 100%; box-sizing: border-box; background: radial-gradient(420px 300px at 50% 8%, color-mix(in srgb, var(--brand) 22%, transparent), transparent 70%), linear-gradient(180deg, var(--surface) 0%, color-mix(in srgb, var(--brand) 8%, var(--surface)) 55%, color-mix(in srgb, var(--brand) 16%, var(--surface)) 100%); }
 .welcome .big { width: 96px; height: 96px; }
 .welcome h1 { font-family: var(--f-display); font-weight: 800; font-size: 34px; margin: 0; color: var(--brand); }
 .splash-logo { position: relative; width: 160px; height: 160px; }
@@ -431,7 +431,7 @@ h2.t { font-family: var(--f-display); font-weight: 800; font-size: 20px; margin:
       try { l = JSON.parse(lsGet('hamdam-limits') || 'null'); } catch (e) { l = null; }
       if (!l || typeof l !== 'object') l = { likesUsed: 0, complimentsUsed: 0, likesResetAt: 0, complimentsResetAt: 0 };
       var now = Date.now();
-      var cap = me.gold ? 30 : 10; if (l.likesUsed >= cap && l.likesResetAt && now >= l.likesResetAt) { l.likesUsed = 0; l.likesResetAt = 0; }
+      var cap = me.gold ? 100 : 10; if (l.likesUsed >= cap && l.likesResetAt && now >= l.likesResetAt) { l.likesUsed = 0; l.likesResetAt = 0; }
       if (l.complimentsUsed >= 1 && l.complimentsResetAt && now >= l.complimentsResetAt) { l.complimentsUsed = 0; l.complimentsResetAt = 0; }
       return l;
     }
@@ -452,12 +452,12 @@ h2.t { font-family: var(--f-display); font-weight: 800; font-size: 20px; margin:
       react: function (id, kind, compliment) {
         var lim = loadLim(), now = Date.now();
         if (kind !== 'pass') {
-          var cap = me.gold ? 30 : 10;
+          var cap = me.gold ? 100 : 10;
           if (lim.likesUsed >= cap) return Promise.reject(limErr('like', lim.likesResetAt));
-          if (compliment && !me.gold && lim.complimentsUsed >= 1) return Promise.reject(limErr('compliment', lim.complimentsResetAt));
+          if (compliment && lim.complimentsUsed >= (me.gold ? 2 : 0)) return Promise.reject(limErr('compliment', lim.complimentsResetAt));
           lim.likesUsed += 1;
           if (lim.likesUsed >= cap) lim.likesResetAt = now + 10 * 3600000;
-          if (compliment && !me.gold) { lim.complimentsUsed += 1; if (lim.complimentsUsed >= 1) lim.complimentsResetAt = now + 10 * 3600000; }
+          if (compliment) { lim.complimentsUsed += 1; if (lim.complimentsUsed >= 2) lim.complimentsResetAt = now + 10 * 3600000; }
           saveLim(lim);
         }
         var p = find(id), match = !!(p && kind !== 'pass' && (p.likes || (kind === 'super' && p.id % 2 === 0)));
@@ -932,22 +932,22 @@ h2.t { font-family: var(--f-display); font-weight: 800; font-size: 20px; margin:
     var l = null;
     if (API && API.limits) { try { l = API.limits(); } catch (e) { l = null; } }
     if (!l && S.limits) l = S.limits;
-    var cap = me.gold ? 30 : 10;
-    if (!l) return { likesLeft: cap, complimentsLeft: 1, likesResetAt: 0, complimentsResetAt: 0 };
-    return { likesLeft: Math.max(0, cap - (l.likesUsed || 0)), complimentsLeft: Math.max(0, 1 - (l.complimentsUsed || 0)), likesResetAt: l.likesResetAt || 0, complimentsResetAt: l.complimentsResetAt || 0 };
+    var cap = me.gold ? 100 : 10;
+    if (!l) return { likesLeft: cap, complimentsLeft: me.gold ? 2 : 0, likesResetAt: 0, complimentsResetAt: 0 };
+    return { likesLeft: Math.max(0, cap - (l.likesUsed || 0)), complimentsLeft: Math.max(0, (me.gold ? 2 : 0) - (l.complimentsUsed || 0)), likesResetAt: l.likesResetAt || 0, complimentsResetAt: l.complimentsResetAt || 0 };
   }
   function limitsLine() {
     var l = limitsNow();
-    var comp = me.gold ? ' · ✨ unlimited compliments' : (l.complimentsLeft ? ' · ✨ ' + pd(l.complimentsLeft) + ' compliment left' : ' · ✨ no compliments left today');
+    var comp = me.gold ? ' · ✨ ' + pd(l.complimentsLeft) + ' compliments left' : ' · ✨ compliments are Gold only';
     return '<div class="demo-note" style="text-align:center;margin:2px 0 10px">♥ ' + pd(l.likesLeft) + ' likes left' + comp + '</div>';
   }
   function limitGoldSheet(kind, resetAt) {
     var hrs = resetAt ? Math.max(1, Math.ceil((resetAt - Date.now()) / 3600000)) : 10;
     var isComp = kind === 'compliment' || kind === 'compliments';
-    var msg = isComp ? 'You have used your free compliment for today. Your compliment returns in ' + pd(hrs) + 'h.' : (me.gold ? 'Your 30 Gold likes are finished. You can like again in ' + pd(hrs) + 'h.' : 'Your likes are finished. You can like again in ' + pd(hrs) + 'h.');
+    var msg = isComp ? (me.gold ? 'You have used your 2 Gold compliments for today. Your compliments return in ' + pd(hrs) + 'h.' : 'Compliments are a Gold feature. Get Gold to send compliments.') : (me.gold ? 'Your 100 Gold likes are finished. You can like again in ' + pd(hrs) + 'h.' : 'Your likes are finished. You can like again in ' + pd(hrs) + 'h.');
     var goldOff = me.goldEnabled === false;
     var goldBtn = (!me.gold && !goldOff) ? '<button class="btn" data-act="goldon">⭐ Get Gold</button>' : '';
-    sheet('<h3>' + (isComp ? 'Compliment' : 'Likes') + ' limit reached</h3><div class="box"><p>' + msg + (goldBtn ? ' Get Gold for more likes and compliments.' : '') + '</p></div><div class="row2" style="margin-top:12px">' + goldBtn + '<button class="btn ghost" data-act="closesheet">Later</button></div>');
+    sheet('<h3>' + (isComp ? (me.gold ? 'Compliment limit reached' : 'Compliments are Gold only') : 'Likes limit reached') + '</h3><div class="box"><p>' + msg + (goldBtn ? ' Get Gold for more likes and compliments.' : '') + '</p></div><div class="row2" style="margin-top:12px">' + goldBtn + '<button class="btn ghost" data-act="closesheet">Later</button></div>');
   }
   function reactLimitErr(e, id) {
     if (e && e.code === 'limit_reached') { delete S.acted[id]; S.history.pop(); limitGoldSheet(e.kind, e.resetAt); render(); return true; }
@@ -1464,13 +1464,13 @@ h2.t { font-family: var(--f-display); font-weight: 800; font-size: 20px; margin:
     
     var lyN = likesYouList().length;
     
-    s += '<div class="row2" style="margin-top:12px"><div class="box" style="text-align:center"><b style="font-size:22px">❤️ ' + pd(lyN) + '</b><div>Likes</div><small style="color:var(--muted)">Get 3x more likes with Gold to keep swiping.</small></div><div class="box" style="text-align:center"><b style="font-size:22px">💬 ' + pd(S.complimentsReceived || 0) + '</b><div>Compliments</div><small style="color:var(--muted)">Kind words people sent you.</small></div></div>';
+    s += '<h2 class="t" style="margin-top:12px">🎯 My goal</h2><div class="seg" role="group">' + [['marriage', 'Marriage'], ['friends', 'Friendship'], ['both', 'Both']].map(function (x) { return '<button data-act="myintent" data-v="' + x[0] + '" aria-pressed="' + (me.intent === x[0]) + '">' + x[1] + '</button>'; }).join('') + '</div>';
+    s += '<div class="row2" style="margin-top:12px"><div class="box" style="text-align:center;padding:10px 8px"><b style="font-size:18px">❤️ ' + pd(lyN) + '</b><div>Likes</div><small style="color:var(--muted)">Get 10x more likes with Gold.</small></div><div class="box" style="text-align:center;padding:10px 8px"><b style="font-size:18px">💬 ' + pd(S.complimentsReceived || 0) + '</b><div>Compliments</div><small style="color:var(--muted)">Kind words people sent you.</small></div></div>';
     s += '<div class="goldcard" style="margin-top:12px">' + (me.goldEnabled === false ? '<b>⭐ Gold — coming soon</b><span>Gold is coming soon. Check back later.</span>' : (me.gold ? '<b>' + (me.goldPromo ? 'Gold — FREE until 1 Jan 2027' : 'Gold — Active ✓') + '</b><span>' + (me.goldUntil ? 'Active until ' + new Date(me.goldUntil).toLocaleDateString() + '.' : 'Your Gold is active.') + '</span><button class="btn" style="margin-top:8px;background:#2b1d02;color:#F1D27A" data-act="gold">Learn more</button>' : (me.goldUntil && me.goldUntil <= Date.now() ? '<b>Your Gold has ended</b><span>Your Gold ended on ' + new Date(me.goldUntil).toLocaleDateString() + '. Get Gold again to keep your benefits.</span><button class="btn" style="margin-top:8px;background:#2b1d02;color:#F1D27A" data-act="gold">Get Gold again</button>' : '<b>⭐ Gold — $5/month</b><span>Upgrade to Gold to find your partner faster.</span><button class="btn" style="margin-top:8px;background:#2b1d02;color:#F1D27A" data-act="gold">Learn more</button>'))) + '</div>';
     s += '<h2 class="t" style="margin-top:16px">✈️ Travel mode</h2><div class="box">' + (tr ? '<h4>✈ Travelling in ' + esc(tr.city) + ', ' + (flagOf(tr.country) ? flagOf(tr.country) + ' ' : '') + esc(tr.country) + '</h4><p>Your profile appears in ' + esc(tr.city) + ' until ' + new Date(tr.until).toLocaleString() + '.</p><button class="btn ghost" data-act="travelclear">End travel mode</button>' : '<h4>Get seen in other countries</h4><p>Appear in another city for 24 hours.</p><div class="field"><label for="tvcity">City</label><input id="tvcity" maxlength="40" placeholder="e.g. Dubai"></div><div class="field"><label for="tvcountry">Country</label><select id="tvcountry"><option value="">Select country</option>' + COUNTRIES.map(function (c) { return '<option value="' + c + '">' + flagOf(c) + ' ' + c + '</option>'; }).join('') + '</select></div><button class="btn" data-act="travelset">Travel for 24 hours</button>') + '</div>';
 
 
     s += '<h2 class="t" style="margin-top:16px">📷 My photos</h2><div class="gal">' + (me.photos || []).map(function (u) { return '<img src="' + u + '" alt=""' + (me.blur ? ' class="blurred"' : '') + '>'; }).join('') + '</div>' + ((me.photos || []).length < 3 ? '<p class="demo-note">Add photos in Settings → Edit profile — 3 photos are required.</p>' : '') + (me.blur ? '<p class="demo-note">Your photos appear blurred to others — until you approve.</p>' : '');
-    s += '<h2 class="t" style="margin-top:16px">🎯 My goal</h2><div class="seg" role="group">' + [['marriage', 'Marriage'], ['friends', 'Friendship'], ['both', 'Both']].map(function (x) { return '<button data-act="myintent" data-v="' + x[0] + '" aria-pressed="' + (me.intent === x[0]) + '">' + x[1] + '</button>'; }).join('') + '</div>';
     s += '<div style="margin-top:14px"></div>' +
       (S.admin ? '<button class="linkrow" data-act="admin"><span>Admin</span>' + ic('shield') + '</button>' : '') +
       '<button class="linkrow" data-act="logout"><span>Log out</span>' + ic('back') + '</button>' +
@@ -1588,6 +1588,7 @@ h2.t { font-family: var(--f-display); font-weight: 800; font-size: 20px; margin:
   }
   function complimentSheet(id) {
     var p = byId(id); if (!p) return;
+    if (!me.gold) { limitGoldSheet('compliment', 0); return; }
     sheet('<h3>Send a Compliment</h3><p class="auth-sub">A kind word for ' + esc(p.name) + '. If you match, it will be the first message in your chat.</p><div class="tagrow">' + COMPLIMENTS.map(function (c) { return '<button type="button" data-act="complimentpick" data-t="' + esc(c) + '">' + esc(c) + '</button>'; }).join('') + '</div><div class="field" style="margin-top:12px"><label for="comptxt">Or write your own</label><input id="comptxt" maxlength="120" placeholder="Write a kind compliment..."></div><div class="row2" style="margin-top:12px"><button class="btn" data-act="sendcompliment" data-id="' + id + '">Send</button><button class="btn ghost" data-act="closesheet">Cancel</button></div>');
   }
   function brandIcon(kind) {
