@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "app.hamdam.twa",
+      "sha256_cert_fingerprints": [
+        "00:46:97:74:C5:E4:49:9C:00:62:02:09:FF:CE:46:69:31:2C:07:1F:F9:4E:55:D2:8D:B9:56:97:3D:EF:1E:6E"
+      ]
+    }
+  }
+]
