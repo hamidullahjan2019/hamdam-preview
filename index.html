@@ -3,7 +3,7 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@600;800&family=Noto+Sans+Arabic:wght@400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Noto+Kufi+Arabic:wght@600;800&family=Noto+Sans+Arabic:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
 /* Layout: one phone-width app column (centered card on desktop). Top bar, scrolling view, bottom tabs. Sheets, chat and onboarding slide over the column. Identity: Facebook-blue system, clean white cards, heart logo kept, faceless illustrated portraits, no real photos. */
 :root {
@@ -123,7 +123,7 @@ h2.t { font-family: var(--f-display); font-weight: 800; font-size: 20px; margin:
 @keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
 .skel-card { height: 420px; border-radius: 16px; }
 .empty-ic { width: 72px; height: 72px; border-radius: 50%; background: var(--chip); display: grid; place-items: center; font-size: 30px; }
-@media (prefers-reduced-motion: reduce) { .spin, .skel { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .spin, .skel, .spl-l, .spl-r, .splash-name { animation: none; } }
 
 /* buttons */
 .btn { border: 0; border-radius: 8px; padding: 13px 18px; font-weight: 800; font-size: 16px; background: var(--brand); color: var(--on-brand); box-shadow: 0 6px 16px color-mix(in srgb, var(--brand) 26%, transparent); }
@@ -251,6 +251,16 @@ h2.t { font-family: var(--f-display); font-weight: 800; font-size: 20px; margin:
 .welcome { display: grid; gap: 14px; justify-items: center; text-align: center; padding: 6vh 0 8px; background: radial-gradient(260px 200px at 50% 12%, color-mix(in srgb, var(--brand) 14%, transparent), transparent 70%); }
 .welcome .big { width: 96px; height: 96px; }
 .welcome h1 { font-family: var(--f-display); font-weight: 800; font-size: 34px; margin: 0; color: var(--brand); }
+.splash-logo { position: relative; width: 160px; height: 160px; }
+.splash-logo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
+.splash-logo .spl-l { clip-path: inset(0 50% 0 0); animation: splL .9s cubic-bezier(.2,.8,.2,1) both; }
+.splash-logo .spl-r { clip-path: inset(0 0 0 50%); animation: splR .9s cubic-bezier(.2,.8,.2,1) both; }
+@keyframes splL { from { transform: translateX(-70px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+@keyframes splR { from { transform: translateX(70px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+.splash-name { font-family: 'Great Vibes', 'Segoe Script', 'Brush Script MT', cursive; font-size: 58px; line-height: 1.15; animation: splUp .9s .3s ease-out both; }
+.splash-name .c1 { color: #E91E63; }
+.splash-name .c2 { color: #1877F2; }
+@keyframes splUp { from { transform: translateY(14px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 .welcome p { margin: 0; color: var(--muted); max-width: 30ch; }
 .feat { display: grid; gap: 8px; text-align: start; width: 100%; margin-top: 4px; }
 .feat div { display: flex; gap: 10px; align-items: flex-start; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 11px 13px; font-size: 14px; box-shadow: var(--shadow-sm); }
@@ -389,7 +399,8 @@ h2.t { font-family: var(--f-display); font-weight: 800; font-size: 20px; margin:
     bell: '<path d="M18 9a6 6 0 10-12 0c0 6-2 7-2 7h16s-2-1-2-7"/><path d="M10 20a2 2 0 004 0"/>',
     phone: '<path d="M5 4h4l2 5-2.5 1.5a12 12 0 005.5 5.5L15.5 14l5 2v4a2 2 0 01-2 2A16 16 0 013 6a2 2 0 012-2z"/>',
     video: '<rect x="2" y="6" width="13" height="12" rx="2"/><path d="M15 10l7-3v10l-7-3z"/>',
-    users: '<circle cx="9" cy="8" r="3.500"/><path d="M2 20c.8-4 3.500-5.500 7-5.500s6.200 1.500 7 5.500M17 5a3.500 3.500 0 010 6.500M22 20c-.4-2.500-1.800-4-4-4.800"/>'
+    users: '<circle cx="9" cy="8" r="3.500"/><path d="M2 20c.8-4 3.500-5.500 7-5.500s6.200 1.500 7 5.500M17 5a3.500 3.500 0 010 6.500M22 20c-.4-2.500-1.800-4-4-4.800"/>',
+    gear: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>'
   };
   /* ======================================================================
      DATA LAYER (API). The UI never touches storage or the network directly:
@@ -894,7 +905,7 @@ h2.t { font-family: var(--f-display); font-weight: 800; font-size: 20px; margin:
     var nn = S.notifs.filter(function (n) { return !n.read; }).length;
     var tabs = [['discover', 'Marriage', 'heart', 0], ['explore', 'Explore', 'compass', lk], ['chats', 'Chat', 'chat', un], ['me', 'Menu', 'user', 0]];
     var fb = '<button class="icon-btn" data-act="filters" aria-label="Filters" style="position:relative">' + ic('sliders') + (filtersActive() ? '<span style="position:absolute;top:2px;inset-inline-end:2px;width:9px;height:9px;border-radius:50%;background:var(--gold);border:2px solid var(--surface)"></span>' : '') + '</button>';
-    app.innerHTML = '<div class="top"><div class="logo">' + logoSvg() + 'Hamdam</div><div><button class="icon-btn" data-act="notifs" aria-label="Notifications" style="position:relative">' + ic('bell') + (nn ? '<span style="position:absolute;top:0;inset-inline-end:0;min-width:17px;height:17px;padding:0 4px;border-radius:9px;background:var(--danger);color:var(--on-brand);font-size:11px;line-height:17px;text-align:center">' + pd(nn) + '</span>' : '') + '</button><button class="icon-btn" data-act="theme" aria-label="Dark mode">' + ic(isDark() ? 'sun' : 'moon') + '</button>' + (S.tab === 'discover' ? fb : S.tab === 'explore' ? fb : '<button class="icon-btn" data-act="safety" aria-label="Safety centre">' + ic('shield') + '</button>') + '</div></div>' +
+    app.innerHTML = '<div class="top"><div class="logo">' + logoSvg() + 'Hamdam</div><div><button class="icon-btn" data-act="notifs" aria-label="Notifications" style="position:relative">' + ic('bell') + (nn ? '<span style="position:absolute;top:0;inset-inline-end:0;min-width:17px;height:17px;padding:0 4px;border-radius:9px;background:var(--danger);color:var(--on-brand);font-size:11px;line-height:17px;text-align:center">' + pd(nn) + '</span>' : '') + '</button><button class="icon-btn" data-act="theme" aria-label="Dark mode">' + ic(isDark() ? 'sun' : 'moon') + '</button>' + (S.tab === 'discover' ? fb : S.tab === 'explore' ? fb : '') + '</div></div>' +
       '<div class="view">' + v + '</div>' +
       '<nav class="tabs" aria-label="Main">' + tabs.map(function (t) { return '<button class="tab" data-act="tab" data-v="' + t[0] + '"' + ((S.tab === t[0] || (t[0] === 'me' && S.tab === 'settings')) ? ' aria-current="page"' : '') + '>' + ic(t[2]) + '<span>' + t[1] + '</span>' + (t[3] ? '<span class="dot">' + pd(t[3]) + '</span>' : '') + '</button>'; }).join('') + '</nav>';
     if (S.tab === 'discover') bindDeck();
@@ -1446,7 +1457,7 @@ h2.t { font-family: var(--f-display); font-weight: 800; font-size: 20px; margin:
     var tr = activeTravel();
     var myph = (me.photos && me.photos.length) ? '<img src="' + me.photos[0] + '" alt=""' + (me.blur ? ' class="blurred"' : '') + ' style="width:100%;height:100%;object-fit:cover">' : art(mine);
     var vs = me.ver === 2 ? '<span class="vstate ok">' + ic('check') + ' Verified</span>' : me.ver === 1 ? '<span class="vstate">Under review…</span>' : '<span class="vstate">Not verified</span>';
-    var s = '<div class="scroll"><div class="meprof"><div class="ph" role="button" tabindex="0" aria-label="View my photo" data-act="viewmyphoto" style="width:56px;height:56px;cursor:pointer">' + myph + (me.ver === 2 ? '<span class="vbadge" style="position:absolute;right:-2px;bottom:-2px;border:2px solid var(--surface)">' + ic('check') + '</span>' : '') + '</div><div style="flex:1;min-width:0"><div class="pname" role="button" tabindex="0" data-act="myprofile" style="color:var(--ink);cursor:pointer">' + esc(me.name) + (me.lastName ? ' ' + esc(me.lastName) : '') + ', ' + pd(me.age) + (me.incog ? ' <span class="vstate">🔒 Hidden</span>' : '') + '</div><div style="color:var(--muted)">' + (me.country ? (flagOf(me.country) ? flagOf(me.country) + ' ' : '') + esc(me.country) : '') + (tr ? ' · ✈ Travelling in ' + esc(tr.city) + ', ' + (flagOf(tr.country) ? flagOf(tr.country) + ' ' : '') + esc(tr.country) : '') + (me.job ? ' · ' + esc(me.job) : '') + '</div>' + (me.about ? '<p style="margin:8px 0 0">' + esc(me.about) + '</p>' : '') + '<div style="margin-top:6px">' + vs + '</div></div><div style="display:grid;gap:8px;align-content:start"><button class="btn alt" data-act="shareme" style="padding:8px 12px">' + ic('send') + ' Share</button><button class="btn alt" data-act="settings" style="padding:8px 12px">Settings</button></div></div>';
+    var s = '<div class="scroll"><div class="meprof"><div class="ph" role="button" tabindex="0" aria-label="View my photo" data-act="viewmyphoto" style="width:56px;height:56px;cursor:pointer">' + myph + (me.ver === 2 ? '<span class="vbadge" style="position:absolute;right:0;bottom:0;border:2px solid var(--surface)">' + ic('check') + '</span>' : '') + '</div><div style="flex:1;min-width:0"><div class="pname" role="button" tabindex="0" data-act="myprofile" style="color:var(--ink);cursor:pointer">' + esc(me.name) + (me.lastName ? ' ' + esc(me.lastName) : '') + ', ' + pd(me.age) + (me.incog ? ' <span class="vstate">🔒 Hidden</span>' : '') + '</div><div style="color:var(--muted)">' + (me.country ? (flagOf(me.country) ? flagOf(me.country) + ' ' : '') + esc(me.country) : '') + (tr ? ' · ✈ Travelling in ' + esc(tr.city) + ', ' + (flagOf(tr.country) ? flagOf(tr.country) + ' ' : '') + esc(tr.country) : '') + (me.job ? ' · ' + esc(me.job) : '') + '</div>' + (me.about ? '<p style="margin:8px 0 0">' + esc(me.about) + '</p>' : '') + '<div style="margin-top:6px">' + vs + '</div></div><div style="display:flex;gap:8px;align-content:start"><button class="icon-btn" data-act="shareme" aria-label="Share profile">' + ic('send') + '</button><button class="icon-btn" data-act="settings" aria-label="Settings">' + ic('gear') + '</button></div></div>';
     if (me.ver !== 2) s += '<button class="btn block" style="margin-top:12px" data-act="verify" ' + (me.ver === 1 ? 'disabled' : '') + '>' + ic('shield') + ' Verify your profile</button>';
     
     var lyN = likesYouList().length;
@@ -1463,7 +1474,7 @@ h2.t { font-family: var(--f-display); font-weight: 800; font-size: 20px; margin:
       '<button class="linkrow" data-act="myprofile"><span>👤 My Profile</span><span>›</span></button>' + (S.admin ? '<button class="linkrow" data-act="admin"><span>Admin</span>' + ic('shield') + '</button>' : '') +
       '<button class="linkrow" data-act="logout"><span>Log out</span>' + ic('back') + '</button>' +
       '<button class="linkrow" data-act="delaccount"><span style="color:var(--danger)">Delete account</span>' + ic('x') + '</button>' +
-      (API.demo ? '<button class="linkrow" style="margin-top:6px" data-act="reset"><span>Start over</span>' + ic('rew') + '</button><p class="demo-note">This is a test prototype. All profiles are fictional and all portraits are illustrations, not real people.</p><p class="demo-note">Note: in this demo, all data stays only on this phone and is never sent anywhere.</p>' : '') + '</div>';
+      (API.demo ? '<button class="linkrow" style="margin-top:6px" data-act="reset"><span>Start over</span>' + ic('rew') + '</button><p class="demo-note">This is a test prototype. All profiles are fictional and all portraits are illustrations, not real people.</p><p class="demo-note">Note: in this demo, all data stays only on this phone and is never sent anywhere.</p>' : '') + '<button class="btn block" data-act="editme" style="margin-top:16px;background:linear-gradient(135deg,#1877F2,#E91E63);border:0;box-shadow:0 6px 18px rgba(233,30,99,.35)">✏️ Edit Profile</button></div>';
     return s;
   }
 
@@ -1802,7 +1813,7 @@ h2.t { font-family: var(--f-display); font-weight: 800; font-size: 20px; margin:
       else rb.textContent = 'Resend code (' + left + 's)';
     }, 1000);
   }
-  function renderLoading(msg) { app.innerHTML = '<div class="onb"><div class="body"><div class="welcome">' + logoSvg('big') + '<div class="spin" role="status" aria-label="Loading"></div><h1>Hamdam</h1><p>' + msg + '</p></div></div></div>'; }
+  function renderLoading(msg) { app.innerHTML = '<div class="onb"><div class="body"><div class="welcome"><div class="splash-logo">' + logoSvg('spl-l') + logoSvg('spl-r') + '</div><div class="splash-name"><span class="c1">Ham</span><span class="c2">dam</span></div><div class="spin" role="status" aria-label="Loading"></div><p>' + msg + '</p></div></div></div>'; }
   /* Google OAuth callback: Supabase redirects back with #access_token=... (implicit flow). */
   function oauthFromHash() {
     try {
