@@ -140,7 +140,7 @@ h2.t { font-family: var(--f-display); font-weight: 800; font-size: 20px; margin:
 .hrow { display: flex; gap: 12px; overflow-x: auto; padding-block: 4px 10px; scrollbar-width: none; }
 .hrow::-webkit-scrollbar { display: none; }
 .mini { flex: none; width: 74px; text-align: center; background: transparent; border: 0; font-size: 12.5px; font-weight: 700; }
-.mini .ph { position: relative; width: 68px; height: 68px; border-radius: 50%; overflow: hidden; margin: 0 auto 4px; border: 3px solid var(--brand); }
+.mini .ph { position: relative; width: 68px; height: 68px; border-radius: 50%; overflow: hidden; margin: 0 auto 4px; border: 3px solid var(--brand); } .phview { position: absolute; inset: 0; z-index: 60; background: rgba(0,0,0,.92); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 16px; } .phview img { max-width: 100%; max-height: 72vh; object-fit: contain; border-radius: 12px; } .phview-bar { display: flex; gap: 8px; align-items: center; color: #fff; }
 .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .gcard { position: relative; aspect-ratio: 3 / 4; border-radius: 8px; overflow: hidden; border: 0; padding: 0; background: var(--chip); text-align: start; }
 .gcard .pinfo { padding: 40px 12px 12px; }
@@ -516,6 +516,7 @@ h2.t { font-family: var(--f-display); font-weight: 800; font-size: 20px; margin:
        Storage is not configured (no SUPABASE_URL / SUPABASE_ANON_KEY, or
        the bucket has not been created yet). Voice audio stays on /media. */
     var storageCfg = null;
+    function uploadVideoToStorage(file) {       return storageConfig().then(function (cfg) {         if (!cfg.storageConfigured || !cfg.supabaseUrl || !cfg.supabaseAnonKey) return Promise.reject(new Error('storage_not_configured'));         var bucket = cfg.videoBucket || 'hamdam-videos';         var ext = (file.name || '').split('.').pop().toLowerCase(); if (['mp4', 'mov', 'webm'].indexOf(ext) < 0) ext = 'mp4';         var name = 'verifyvideo-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10) + '.' + ext;         var base = String(cfg.supabaseUrl).replace(/\/$/, '');         return fetch(base + '/storage/v1/object/' + bucket + '/' + name, {           method: 'PUT', headers: { apikey: cfg.supabaseAnonKey, Authorization: 'Bearer ' + cfg.supabaseAnonKey, 'Content-Type': file.type || 'video/mp4' }, body: file         }).then(function (r) {           if (!r.ok) throw new Error('storage_upload_failed');           return base + '/storage/v1/object/public/' + bucket + '/' + name;         });       });     }
     function storageConfig() {
       if (storageCfg) return Promise.resolve(storageCfg);
       return req('GET', '/config').then(function (r) { storageCfg = r; return r; }).catch(function () { storageCfg = { storageConfigured: false }; return storageCfg; });
@@ -586,7 +587,7 @@ h2.t { font-family: var(--f-display); font-weight: 800; font-size: 20px; margin:
       report: function (id, reason) { return req('POST', '/report', { id: id, reason: reason }); },
       reportProblem: function (text, category) { return req('POST', '/report-problem', { text: text, category: category }); },
       requestPhoto: function (id) { return req('POST', '/photo-request', { id: id }); },
-      verifyRequest: function (selfie) { return req('POST', '/verify', { selfie: selfie }); },
+      verifyRequest: function (selfie, video) { return req('POST', '/verify', { selfie: selfie, video: video }); },
       adminCheck: function () { return req('GET', '/admin/check'); },
       adminVerifications: function () { return req('GET', '/admin/panel/verifications'); },
       adminVerify: function (id, approve) { return req('POST', '/admin/panel/verify', { id: id, approve: approve }); },
@@ -952,7 +953,7 @@ h2.t { font-family: var(--f-display); font-weight: 800; font-size: 20px; margin:
     function end() {
       if (!on) return; on = false; c.style.transition = '';
       if (dx > 90) act(+c.dataset.id, 'like'); else if (dx < -90) act(+c.dataset.id, 'pass');
-      else if (Math.abs(dx) < 6) openProfile(+c.dataset.id);
+      else if (Math.abs(dx) < 15) openProfile(+c.dataset.id);
       else { c.style.transform = ''; yes.style.opacity = 0; no.style.opacity = 0; }
     }
     c.addEventListener('pointerup', end); c.addEventListener('pointercancel', function () { on = false; c.style.transition = ''; c.style.transform = ''; });
@@ -993,6 +994,7 @@ h2.t { font-family: var(--f-display); font-weight: 800; font-size: 20px; margin:
   }
 
   /* ---------- profile detail ---------- */
+  function photoViewer(id, idx) {     var p = byId(id); if (!p) return;     if (p.priv && !S.unlocked[id]) { toast('Photo hidden. Reveal it first.'); return; }     var ph = p.photos || []; if (!ph.length) return;     idx = ((idx || 0) % ph.length + ph.length) % ph.length;     var old = app.querySelector('.phview'); if (old) old.remove();     var d = document.createElement('div'); d.className = 'phview';     d.innerHTML = '<img src="' + esc(ph[idx]) + '" alt=""><div class="phview-bar"><span>' + pd(idx + 1) + ' / ' + pd(ph.length) + '</span>' + (ph.length > 1 ? '<button class="btn ghost" data-act="phprev" data-id="' + id + '" data-v="' + idx + '">‹</button><button class="btn ghost" data-act="phnext" data-id="' + id + '" data-v="' + idx + '">›</button>' : '') + '<button class="btn" data-act="phclose">Close</button></div>';     app.appendChild(d);   }
   function openProfile(id) {
     var p = byId(id), c = compat(p), isM = !!S.matches[id], acted = S.acted[id];
     if (API.visit && !me.incog && me.done) API.visit(id).catch(function () {});
@@ -1004,7 +1006,7 @@ h2.t { font-family: var(--f-display); font-weight: 800; font-size: 20px; margin:
     if (p.city && me.city && p.city === me.city) sims.push('Lives in ' + p.city);
     if (p.prayer === me.prayer) sims.push(PRAYER[p.prayer]);
     if (p.country && me.country && p.country === me.country) sims.push(p.country);
-    var html = '<div class="hero">' + photo(p) + '<button class="backbtn" data-act="closesheet" aria-label="Close">' + ic('x') + '</button></div><div class="pbody">' +
+    var html = '<div class="hero" data-act="viewphoto" data-id="' + id + '">' + photo(p) + '<button class="backbtn" data-act="closesheet" aria-label="Close">' + ic('x') + '</button></div><div class="pbody">' +
       '<div><div class="pname" style="color:var(--ink)">' + esc(p.name) + ', ' + pd(p.age) + (p.ver ? '<span class="vbadge">' + ic('check') + '</span>' : '') + '</div>' + (p.username ? '<div style="color:var(--muted)">@' + esc(p.username) + '</div>' : '') + '<div style="color:var(--muted)">' + esc(p.job) + ' · ' + (flagOf(p.country || CITY_COUNTRY[p.city] || '') ? flagOf(p.country || CITY_COUNTRY[p.city] || '') + ' ' : '') + esc(p.city) + ((p.country || CITY_COUNTRY[p.city]) ? ', ' + esc(p.country || CITY_COUNTRY[p.city]) : '') + ((p.dist != null && me.dist) ? ' · ' + pd(p.dist) + ' km' : '') + '</div>' +
       '<div class="chips"><span class="chip hi">' + INTENT[p.intent] + '</span><span class="chip">' + PRAYER[p.prayer] + '</span>' + (p.ver ? '<span class="chip">Verified</span>' : '') + (p.nationality ? '<span class="chip">' + esc(p.nationality) + '</span>' : '') + (p.ethnicity ? '<span class="chip">' + esc(p.ethnicity) + '</span>' : '') + '</div></div>' +
       (locked ? '<div class="banner">' + ic('lock') + '<div>' + (isM ? 'This person keeps their photo hidden until they approve. Do you want to request to see it? <button data-act="reqphoto" data-id="' + id + '">Request</button>' : 'This person keeps their photo hidden until they approve it for a match.') + '</div></div>' : '') +
@@ -1137,7 +1139,7 @@ h2.t { font-family: var(--f-display); font-weight: 800; font-size: 20px; margin:
     if (!ids.length) return s + '<div class="empty"><span class="empty-ic">💬</span><b>No messages yet</b><span>When you match, your conversations start here.</span><button class="btn" data-act="tab" data-v="discover">Go to Marriage</button></div></div>';
     s += ids.map(function (k) {
       var p = byId(+k), m = S.matches[k], mine = m.msgs.some(function (x) { return x.f === 'me'; });
-      return '<button class="crow" data-act="mchat" data-id="' + p.id + '"><div class="ph">' + photo(p) + '</div><div class="tx"><div class="nm">' + esc(p.name) + (p.ver ? '<span class="vbadge">' + ic('check') + '</span>' : '') + '</div><div class="pv">' + esc(lastMsg(m)) + '</div>' + (!mine ? '<div class="left">First message: ' + pd(hoursLeft(m)) + ' h left</div>' : '') + '</div>' + (m.unread ? '<span class="unread" aria-label="New message"></span>' : '') + '</button>';
+      return '<button class="crow" data-act="mchat" data-id="' + p.id + '"><div class="ph" data-act="open" data-id="' + p.id + '">' + photo(p) + '</div><div class="tx"><div class="nm">' + esc(p.name) + (p.ver ? '<span class="vbadge">' + ic('check') + '</span>' : '') + '</div><div class="pv">' + esc(lastMsg(m)) + '</div>' + (!mine ? '<div class="left">First message: ' + pd(hoursLeft(m)) + ' h left</div>' : '') + '</div>' + (m.unread ? '<span class="unread" aria-label="New message"></span>' : '') + '</button>';
     }).join('');
     return s + '</div>';
   }
@@ -1389,13 +1391,13 @@ h2.t { font-family: var(--f-display); font-weight: 800; font-size: 20px; margin:
     var tr = activeTravel();
     var myph = (me.photos && me.photos.length) ? '<img src="' + me.photos[0] + '" alt=""' + (me.blur ? ' class="blurred"' : '') + ' style="width:100%;height:100%;object-fit:cover">' : art(mine);
     var vs = me.ver === 2 ? '<span class="vstate ok">' + ic('check') + ' Verified</span>' : me.ver === 1 ? '<span class="vstate">Under review…</span>' : '<span class="vstate">Not verified</span>';
-    var s = '<div class="scroll"><div class="meprof"><div class="ph" style="width:56px;height:56px">' + myph + '</div><div style="flex:1;min-width:0"><div class="pname" style="color:var(--ink)">' + esc(me.name) + ', ' + pd(me.age) + (me.incog ? ' <span class="vstate">🔒 Hidden</span>' : '') + '</div><div style="color:var(--muted)">' + (me.username ? '@' + esc(me.username) + ' · ' : '') + esc(me.city) + (me.country ? ', ' + esc(me.country) : '') + (tr ? ' · ✈ Travelling in ' + esc(tr.city) + ', ' + esc(tr.country) : '') + (me.job ? ' · ' + esc(me.job) : '') + '</div>' + (me.about ? '<p style="margin:8px 0 0">' + esc(me.about) + '</p>' : '') + '<div style="margin-top:6px">' + vs + '</div></div><div style="display:grid;gap:8px;align-content:start"><button class="btn alt" data-act="shareme" style="padding:8px 12px">' + ic('send') + ' Share</button><button class="btn alt" data-act="settings" style="padding:8px 12px">Settings</button></div></div>';
+    var s = '<div class="scroll"><div class="meprof"><div class="ph" style="width:56px;height:56px">' + myph + (me.ver === 2 ? '<span class="vbadge" style="position:absolute;right:-2px;bottom:-2px;border:2px solid var(--surface)">' + ic('check') + '</span>' : '') + '</div><div style="flex:1;min-width:0"><div class="pname" style="color:var(--ink)">' + esc(me.name) + ', ' + pd(me.age) + (me.incog ? ' <span class="vstate">🔒 Hidden</span>' : '') + '</div><div style="color:var(--muted)">' + (me.username ? '@' + esc(me.username) + ' · ' : '') + esc(me.city) + (me.country ? ', ' + esc(me.country) : '') + (tr ? ' · ✈ Travelling in ' + esc(tr.city) + ', ' + esc(tr.country) : '') + (me.job ? ' · ' + esc(me.job) : '') + '</div>' + (me.about ? '<p style="margin:8px 0 0">' + esc(me.about) + '</p>' : '') + '<div style="margin-top:6px">' + vs + '</div></div><div style="display:grid;gap:8px;align-content:start"><button class="btn alt" data-act="shareme" style="padding:8px 12px">' + ic('send') + ' Share</button><button class="btn alt" data-act="settings" style="padding:8px 12px">Settings</button></div></div>';
     if (me.ver !== 2) s += '<button class="btn block" style="margin-top:12px" data-act="verify" ' + (me.ver === 1 ? 'disabled' : '') + '>' + ic('shield') + ' Verify your profile</button>';
     
     var lyN = likesYouList().length;
     
     s += '<div class="row2" style="margin-top:12px"><div class="box" style="text-align:center"><b style="font-size:28px">' + pd(lyN) + '</b><div>Likes</div><small style="color:var(--muted)">Get 3x more likes with Gold to keep swiping.</small></div><div class="box" style="text-align:center"><b style="font-size:28px">' + pd(S.complimentsReceived || 0) + '</b><div>Compliments</div><small style="color:var(--muted)">Kind words people sent you.</small></div></div>';
-    s += '<div class="goldcard" style="margin-top:12px">' + (me.gold ? '<b>Gold — Active ✓</b><span>' + (me.goldUntil ? 'Active until ' + new Date(me.goldUntil).toLocaleDateString() + '.' : 'Your Gold is active.') + '</span><button class="btn" style="margin-top:8px;background:#2b1d02;color:#F1D27A" data-act="gold">Learn more</button>' : (me.goldUntil && me.goldUntil <= Date.now() ? '<b>Your Gold has ended</b><span>Your Gold ended on ' + new Date(me.goldUntil).toLocaleDateString() + '. Get Gold again to keep your benefits.</span><button class="btn" style="margin-top:8px;background:#2b1d02;color:#F1D27A" data-act="gold">Get Gold again</button>' : '<b>Gold — $5/month</b><span>Upgrade to Gold to find your partner faster.</span><button class="btn" style="margin-top:8px;background:#2b1d02;color:#F1D27A" data-act="gold">Learn more</button>')) + '</div>';
+    s += '<div class="goldcard" style="margin-top:12px">' + (me.gold ? '<b>' + (me.goldPromo ? 'Gold — FREE until 1 Jan 2027' : 'Gold — Active ✓') + '</b><span>' + (me.goldUntil ? 'Active until ' + new Date(me.goldUntil).toLocaleDateString() + '.' : 'Your Gold is active.') + '</span><button class="btn" style="margin-top:8px;background:#2b1d02;color:#F1D27A" data-act="gold">Learn more</button>' : (me.goldUntil && me.goldUntil <= Date.now() ? '<b>Your Gold has ended</b><span>Your Gold ended on ' + new Date(me.goldUntil).toLocaleDateString() + '. Get Gold again to keep your benefits.</span><button class="btn" style="margin-top:8px;background:#2b1d02;color:#F1D27A" data-act="gold">Get Gold again</button>' : '<b>Gold — $5/month</b><span>Upgrade to Gold to find your partner faster.</span><button class="btn" style="margin-top:8px;background:#2b1d02;color:#F1D27A" data-act="gold">Learn more</button>')) + '</div>';
     s += '<h2 class="t" style="margin-top:16px">Travel mode</h2><div class="box">' + (tr ? '<h4>✈ Travelling in ' + esc(tr.city) + ', ' + esc(tr.country) + '</h4><p>Your profile appears in ' + esc(tr.city) + ' until ' + new Date(tr.until).toLocaleString() + '.</p><button class="btn ghost" data-act="travelclear">End travel mode</button>' : '<h4>Get seen in other countries</h4><p>Appear in another city for 24 hours.</p><div class="field"><label for="tvcity">City</label><input id="tvcity" maxlength="40" placeholder="e.g. Dubai"></div><div class="field"><label for="tvcountry">Country</label><select id="tvcountry"><option value="">Select country</option>' + COUNTRIES.map(function (c) { return '<option value="' + c + '">' + c + '</option>'; }).join('') + '</select></div><button class="btn" data-act="travelset">Travel for 24 hours</button>') + '</div>';
 
     s += '<h2 class="t" style="margin-top:16px">Stay in control</h2><div class="box"><h4>Browse privately</h4><p>View profiles without them knowing.</p><button class="btn" data-act="toggle" data-k="incog">' + (me.incog ? 'Private browsing on ✓' : 'Turn on private browsing') + '</button></div>';
@@ -1523,7 +1525,7 @@ h2.t { font-family: var(--f-display); font-weight: 800; font-size: 20px; margin:
     sheet('<h3>Send a Compliment</h3><p class="auth-sub">A kind word for ' + esc(p.name) + '. If you match, it will be the first message in your chat.</p><div class="tagrow">' + COMPLIMENTS.map(function (c) { return '<button type="button" data-act="complimentpick" data-t="' + esc(c) + '">' + esc(c) + '</button>'; }).join('') + '</div><div class="field" style="margin-top:12px"><label for="comptxt">Or write your own</label><input id="comptxt" maxlength="120" placeholder="Write a kind compliment..."></div><div class="row2" style="margin-top:12px"><button class="btn" data-act="sendcompliment" data-id="' + id + '">Send</button><button class="btn ghost" data-act="closesheet">Cancel</button></div>');
   }
   function goldSheet() {
-    sheet('<h3>Hamdam Gold</h3><div class="goldcard"><b>More people. More matches.</b><span>' + (API.demo ? 'Test preview. No money is charged.' : 'Gold — $5/month. For more likes and other features.') + '</span></div><div class="box" style="margin-top:12px"><ul class="why" style="margin:0">' + ['See who likes you', 'Rewind to the previous card', 'Unlimited Special likes', 'Your profile shown to more people', 'Boost your profile'].map(function (t) { return '<li>' + ic('check') + '<span>' + t + '</span></li>'; }).join('') + '</ul><p style="margin:10px 0 0"><b>$5</b> for 30 days of Gold. One payment, no subscription.</p></div><div class="row2" style="margin-top:12px"><button class="btn" data-act="goldon">' + (me.gold ? 'Active ✓' : (API.demo ? 'Start the trial' : 'Get Gold')) + '</button><button class="btn ghost" data-act="closesheet">Later</button></div>');
+    sheet('<h3>Hamdam Gold</h3><div class="goldcard"><b>More people. More matches.</b><span>' + (API.demo ? 'Test preview. No money is charged.' : (me.goldPromo ? 'FREE until 1 January 2027 — then $5/month. For more likes and other features.' : 'Gold — $5/month. For more likes and other features.')) + '</span></div><div class="box" style="margin-top:12px"><ul class="why" style="margin:0">' + ['See who likes you', 'Rewind to the previous card', 'Unlimited Special likes', 'Your profile shown to more people', 'Boost your profile'].map(function (t) { return '<li>' + ic('check') + '<span>' + t + '</span></li>'; }).join('') + '</ul><p style="margin:10px 0 0">' + (me.goldPromo ? '<b>FREE</b> until 1 January 2027, then <b>$5</b> for 30 days of Gold. One payment, no subscription.' : '<b>$5</b> for 30 days of Gold. One payment, no subscription.') + '</p></div><div class="row2" style="margin-top:12px"><button class="btn" data-act="goldon">' + (me.gold ? 'Active ✓' : (API.demo ? 'Start the trial' : 'Get Gold')) + '</button><button class="btn ghost" data-act="closesheet">Later</button></div>');
   }
   function blockedSheet() {
     var ids = (S.blockedUsers && S.blockedUsers.length ? S.blockedUsers : Object.keys(S.blocked).map(function (k) { return { id: +k, name: (byId(+k) || {}).name || '' }; }).filter(function (x) { return x.name; }));
@@ -1541,7 +1543,7 @@ h2.t { font-family: var(--f-display); font-weight: 800; font-size: 20px; margin:
       var el = document.getElementById('adminbody'); if (!el) return;
       var p = r[0].pending || [], us = r[1].users || [], rp = r[2].reports || [], h = '';
       h += '<h4 style="margin:12px 0 6px">Pending verifications (' + p.length + ')</h4>';
-      h += p.length ? p.map(function (x) { return '<div class="box" style="margin-top:8px"><div style="display:flex;gap:10px;align-items:center">' + (x.selfieUrl ? '<img src="' + x.selfieUrl + '" alt="Selfie" style="width:64px;height:64px;object-fit:cover;border-radius:10px">' : '<div style="width:64px;height:64px;border-radius:10px;background:var(--line)"></div>') + '<div style="flex:1;min-width:0"><b>' + esc(x.name || '—') + '</b><div style="color:var(--muted)">#' + x.id + '</div></div></div><div class="hrow" style="margin-top:10px"><button class="btn" data-act="adminverify" data-id="' + x.id + '" data-v="1">Approve</button><button class="btn ghost" data-act="adminverify" data-id="' + x.id + '" data-v="0">Reject</button></div></div>'; }).join('') : '<p class="demo-note">No pending verifications.</p>';
+      h += p.length ? p.map(function (x) { return '<div class="box" style="margin-top:8px"><div style="display:flex;gap:10px;align-items:center">' + (x.selfieUrl ? '<img src="' + x.selfieUrl + '" alt="Selfie" style="width:64px;height:64px;object-fit:cover;border-radius:10px">' : '<div style="width:64px;height:64px;border-radius:10px;background:var(--line)"></div>') + '<div style="flex:1;min-width:0"><b>' + esc(x.name || '—') + '</b><div style="color:var(--muted)">#' + x.id + '</div></div></div>' + (x.videoUrl ? '<div style="margin-top:8px"><video src="' + x.videoUrl + '" controls playsinline style="width:100%;max-height:220px;border-radius:10px;background:#000"></video><div style="color:var(--muted);font-size:12px;margin-top:2px">Verification video</div></div>' : '') + (x.photos && x.photos.length ? '<div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">' + x.photos.map(function (u) { return '<img src="' + u + '" alt="" style="width:52px;height:52px;object-fit:cover;border-radius:8px">'; }).join('') + '</div><div style="color:var(--muted);font-size:12px;margin-top:2px">Profile photos — compare with the selfie/video</div>' : '') + '<div class="hrow" style="margin-top:10px"><button class="btn" data-act="adminverify" data-id="' + x.id + '" data-v="1">Approve</button><button class="btn ghost" data-act="adminverify" data-id="' + x.id + '" data-v="0">Reject</button></div></div>'; }).join('') : '<p class="demo-note">No pending verifications.</p>';
       h += '<h4 style="margin:16px 0 6px">Users (' + us.length + ')</h4>';
       h += us.length ? us.map(function (x) { return '<div class="setrow"><div class="tx"><b>' + esc(x.name || '—') + '</b><small>' + esc(x.contact || '') + (x.age ? ' \u00b7 ' + x.age : '') + (x.gold ? ' \u00b7 Gold' : '') + ' \u00b7 ' + (x.ver === 2 ? 'Verified ✓' : x.ver === 1 ? 'Pending review' : 'Not verified') + '</small></div></div>'; }).join('') : '<p class="demo-note">No users yet.</p>';
       h += '<h4 style="margin:16px 0 6px">Reports (' + rp.length + ')</h4>';
@@ -1550,7 +1552,7 @@ h2.t { font-family: var(--f-display); font-weight: 800; font-size: 20px; margin:
     });
   }
   function verifySheet() {
-    sheet('<h3>Verification</h3><div class="box"><p>The verification badge shows the profile is real. Take a selfie; ' + (API.demo ? 'This is only a demo and it verifies automatically.' : 'Our team will review it and let you know the result.') + '</p></div><label class="btn block" style="margin-top:12px;text-align:center;cursor:pointer">Take a selfie<input type="file" id="selfiefile" accept="image/*" capture="user" hidden></label>');
+    sheet('<h3>Verification</h3><div class="box"><p>The verification badge shows the profile is real. Take a selfie or record a short video (5-10 seconds, show your face); ' + (API.demo ? 'This is only a demo and it verifies automatically.' : 'Our team will review it and let you know the result.') + '</p></div><label class="btn block" style="margin-top:12px;text-align:center;cursor:pointer">Take a selfie<input type="file" id="selfiefile" accept="image/*" capture="user" hidden></label><label class="btn block ghost" style="margin-top:8px;text-align:center;cursor:pointer">Record a short video<input type="file" id="verifyvideo" accept="video/*" capture="user" hidden></label>');
   }
 
   /* ---------- onboarding ---------- */
@@ -1813,7 +1815,7 @@ h2.t { font-family: var(--f-display); font-weight: 800; font-size: 20px; margin:
         if (!me.gold) { goldSheet(); break; }
         API.undo().then(function (r) { var last = r && r.id; if (last) { delete S.acted[last]; delete S.matches[last]; render(); toast('Brought back'); } else toast('Nothing to rewind'); }).catch(function (e) { toast(errText(e)); });
         break;
-      case 'open': openProfile(id); break;
+      case 'open': openProfile(id); break;       case 'viewphoto': photoViewer(id, 0); break;       case 'phprev': photoViewer(id, (v || 0) - 1); break;       case 'phnext': photoViewer(id, (v || 0) + 1); break;       case 'phclose': var pvEl = app.querySelector('.phview'); if (pvEl) pvEl.remove(); break;
       case 'closesheet': closeSheet(); break;
       case 'filters': if (!me.gold) { startGold(function () { filtersSheet(); }); } else filtersSheet(); break;
       case 'goldfilters': filtersSheet(); break;
@@ -1994,6 +1996,14 @@ h2.t { font-family: var(--f-display); font-weight: 800; font-size: 20px; margin:
         si.src = sr.result;
       };
       sr.readAsDataURL(sf); t.value = '';
+    }
+    if (t.id === 'verifyvideo' && t.files && t.files.length) {
+      var vf = t.files[0];
+      if (vf.size > 15 * 1024 * 1024) { toast('Video is too large. Keep it under 15 MB.'); t.value = ''; return; }
+      me.ver = 1; closeSheet(); render();
+      var upv = API.demo ? Promise.resolve('demo-video') : uploadVideoToStorage(vf).catch(function () { return null; });
+      upv.then(function (url) { if (!url) { me.ver = 0; render(); toast('Video upload failed. Try again.'); return; } return API.verifyRequest(null, url); }).catch(function (e) { me.ver = 0; render(); toast(errText(e)); });
+      t.value = '';
     }
   });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { if (app.querySelector('.sheet')) closeSheet(); else if (app.querySelector('.match')) { var m = app.querySelector('.match'); m.remove(); } } });
