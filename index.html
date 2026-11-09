@@ -595,6 +595,8 @@ h2.t { font-family: var(--f-display); font-weight: 800; font-size: 20px; margin:
       undo: function () { return req('POST', '/undo', {}); },
       saveMe: function (me) { return req('PUT', '/me', me); },
       photo: function (dataUrl) { return uploadToStorage(dataUrl, 'photo').catch(function () { return req('POST', '/media', { dataUrl: dataUrl, kind: 'photo' }).then(function (r) { return r.url; }); }); },
+      uploadToStorage: uploadToStorage,
+      uploadVideoToStorage: uploadVideoToStorage,
       media: function (dataUrl) { return req('POST', '/media', { dataUrl: dataUrl, kind: 'chat' }).then(function (r) { return r.url; }); },
       chatPhoto: function (dataUrl) { return uploadToStorage(dataUrl, 'chat').catch(function () { return req('POST', '/media', { dataUrl: dataUrl, kind: 'chat' }).then(function (r) { return r.url; }); }); },
       send: function (id, body) { var b = {}; for (var k in body) b[k] = body[k]; b.to = id; return req('POST', '/messages', b).then(function (r) { var out = r.msg || {}; if (r && r.held) out.held = r.held; return out; }); },
@@ -625,7 +627,7 @@ h2.t { font-family: var(--f-display); font-weight: 800; font-size: 20px; margin:
   var API = CFG.mode === 'remote' ? RemoteAPI(CFG) : DemoAPI();
   var NETERR = 'Connection failed. Try again.';
   function errText(e) {
-    var c = e && e.code, M = { bad_code: 'Wrong code', age_invalid: 'You must be 18 or older to sign up.', rate_limited: 'Too many attempts. Try again a little later.', blocked: 'This is not allowed.', not_matched: 'You need to match first.', chat_limit: 'Chat limit reached', limit_reached: 'Daily limit reached. Get Gold for more.', not_gold: 'This feature is only for Gold.', unauthorized: 'Log in again.', women_first: 'Only the woman can send the first message.', no_profile: 'Complete your profile first.', bad_media: 'This file is not accepted.', empty: 'Message is empty.' };
+    var c = e && e.code, M = { bad_code: 'Wrong code', age_invalid: 'You must be 18 or older to sign up.', rate_limited: 'Too many attempts. Try again a little later.', blocked: 'This is not allowed.', not_matched: 'You need to match first.', chat_limit: 'Chat limit reached', limit_reached: 'Daily limit reached. Get Gold for more.', not_gold: 'This feature is only for Gold.', unauthorized: 'Log in again.', women_first: 'Only the woman can send the first message.', no_profile: 'Complete your profile first.', bad_media: 'This file is not accepted.', empty: 'Message is empty.', server_error: 'Something went wrong. Try again.', billing_not_configured: 'Payment is not connected yet.' };
     return (c && M[c]) || NETERR;
   }
 
@@ -723,7 +725,7 @@ h2.t { font-family: var(--f-display); font-weight: 800; font-size: 20px; margin:
     if (API.local) lsSet('hamdam-me', JSON.stringify(me));
     else {
       lsSet('hamdam-prefs', JSON.stringify({ theme: me.theme, lang: me.lang }));
-      if (!me.done) return;
+      if (!me.done) { try { lsSet('hamdam-onb', JSON.stringify({ me: me, step: S.onbStep })); } catch (e) {} return; }
       clearTimeout(syncT);
       syncT = setTimeout(function () { API.saveMe(me).then(function (r) { if (r && r.me) { if (r.me.ver != null && r.me.ver !== me.ver) { me.ver = r.me.ver; } if (r.me.gold != null) me.gold = r.me.gold; } }).catch(function (e) { toast(errText(e)); }); }, 500);
     }
@@ -954,7 +956,7 @@ h2.t { font-family: var(--f-display); font-weight: 800; font-size: 20px; margin:
     sheet('<h3>' + (isComp ? (me.gold ? 'Compliment limit reached' : 'Compliments are Gold only') : 'Likes limit reached') + '</h3><div class="box"><p>' + msg + (goldBtn ? ' Get Gold for more likes and compliments.' : '') + '</p></div><div class="row2" style="margin-top:12px">' + goldBtn + '<button class="btn ghost" data-act="closesheet">Later</button></div>');
   }
   function reactLimitErr(e, id) {
-    if (e && e.code === 'limit_reached') { delete S.acted[id]; S.history.pop(); limitGoldSheet(e.kind, e.resetAt); render(); return true; }
+    if (e && e.code === 'limit_reached') { delete S.acted[id]; S.history = S.history.filter(function (x) { return x !== id; }); limitGoldSheet(e.kind, e.resetAt); render(); return true; }
     return false;
   }
   var deckLoading = false;
@@ -997,11 +999,11 @@ h2.t { font-family: var(--f-display); font-weight: 800; font-size: 20px; margin:
       S.acted[id] = kind; S.history.push(id); closeSheet();
       if (compliment) S.pendingCompliment[id] = compliment;
       var pr = API.react(id, kind, compliment);
-      if (kind === 'pass') { pr.catch(function (e) { if (reactLimitErr(e, id)) return; delete S.acted[id]; S.history.pop(); toast(errText(e)); render(); }); render(); return; }
+      if (kind === 'pass') { pr.catch(function (e) { if (reactLimitErr(e, id)) return; delete S.acted[id]; S.history = S.history.filter(function (x) { return x !== id; }); delete S.pendingCompliment[id]; toast(errText(e)); render(); }); render(); return; }
       pr.then(function (r) {
         if (r && r.limits) S.limits = r.limits;
         if (r && r.match) { newMatch(p, null, false, r.msgs || null); if (!API.demo) refreshData().catch(function () {}); } else { toast(kind === 'super' ? 'Special like sent' : 'Like sent'); render(); }
-      }).catch(function (e) { if (reactLimitErr(e, id)) return; delete S.acted[id]; S.history.pop(); toast(errText(e)); render(); });
+      }).catch(function (e) { if (reactLimitErr(e, id)) return; delete S.acted[id]; S.history = S.history.filter(function (x) { return x !== id; }); delete S.pendingCompliment[id]; toast(errText(e)); render(); });
     }
     if (c && S.tab === 'discover') { c.style.transform = 'translateX(' + (kind === 'pass' ? -460 : 460) + 'px) rotate(' + (kind === 'pass' ? -18 : 18) + 'deg)'; c.style.opacity = 0; setTimeout(go, 230); } else go();
   }
@@ -1012,8 +1014,8 @@ h2.t { font-family: var(--f-display); font-weight: 800; font-size: 20px; margin:
       if (fromThem && compliment && mine) { S.matches[p.id].msgs.push({ f: 'me', text: mine, t: Date.now() }); S.matches[p.id].msgs.push({ f: 'them', text: compliment, t: Date.now() }); }
       else if (compliment) S.matches[p.id].msgs.push({ f: fromThem ? 'them' : 'me', text: compliment, t: Date.now() });
       else if (mine) S.matches[p.id].msgs.push({ f: 'me', text: mine, t: Date.now() });
-      delete S.pendingCompliment[p.id];
     }
+    delete S.pendingCompliment[p.id];
     pushNotif('New match: ' + p.name, 'heart');
     render();
     var m = document.createElement('div'); m.className = 'match'; m.setAttribute('role', 'dialog'); m.setAttribute('aria-modal', 'true');
@@ -1106,7 +1108,7 @@ h2.t { font-family: var(--f-display); font-weight: 800; font-size: 20px; margin:
   function myEditHTML() {
     var html = '';
     html += profileCompleteHTML();
-    html += '<h2 class="t" style="margin-top:16px">Photos</h2><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">' + (me.photos || []).map(function (u, i) { return '<div style="position:relative;aspect-ratio:3/4;border-radius:10px;overflow:hidden"><img src="' + u + '" alt="" data-act="viewmyphoto" style="width:100%;height:100%;object-fit:cover">' + (i === 0 ? '<span style="position:absolute;left:6px;bottom:6px;background:rgba(0,0,0,.65);color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px">Main</span>' : '') + '</div>'; }).join('') + '</div>';
+    html += '<h2 class="t" style="margin-top:16px">Photos</h2><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">' + (me.photos || []).map(function (u, i) { return '<div style="position:relative;aspect-ratio:3/4;border-radius:10px;overflow:hidden"><img src="' + u + '" alt="" data-act="viewmyphoto" data-i="' + i + '" style="width:100%;height:100%;object-fit:cover">' + (i === 0 ? '<span style="position:absolute;left:6px;bottom:6px;background:rgba(0,0,0,.65);color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px">Main</span>' : '') + '</div>'; }).join('') + '</div>';
     html += '<button class="btn block" data-act="editme" style="margin-top:8px">Add or change photos</button>';
     if ((me.photos || []).length < 3) html += '<p class="demo-note">3 photos are required — add them in Edit Profile → My photos.</p>';
     html += '<h2 class="t" style="margin-top:16px">Video</h2><div class="box" style="text-align:center;padding:24px 12px"><div style="font-size:32px">▶️</div><p style="color:var(--muted)">Add a short video to your profile.</p><button class="btn" data-act="verify">Record a video</button></div>';
@@ -1205,7 +1207,7 @@ h2.t { font-family: var(--f-display); font-weight: 800; font-size: 20px; margin:
     s += likedActed.length ? '<div class="grid2">' + likedActed.slice(0, 4).map(function (p) { return gcardHtml(p); }).join('') + '</div>' : '<p class="demo-note" style="text-align:start">Send a compliment with your like — tap ✨ on a profile while you decide.</p>';
     if (!me.gold) {
       s += '<div class="box" style="margin-top:12px"><h4>See who likes you</h4><p>Gold members see everyone who liked them.</p><button class="btn" data-act="gold">Get Gold — $5/month</button></div>';
-      s += '<div class="box" style="margin-top:12px"><h4>Get more visits and likes</h4><p>We\'ll show your profile to more people for 3 hours.</p><button class="btn" data-act="gold">Boost for 3 hours</button></div>';
+      s += '<div class="box" style="margin-top:12px"><h4>Get more visits and likes</h4><p>We\'ll show your profile to more people for 3 hours.</p><button class="btn" data-act="gold">Get Gold</button></div>';
     } else {
       var inF = ly.filter(function (p) { return passesFilters(p, { f: S.f, fg: S.fg, fmode: 'gold' }); });
       var outF = ly.filter(function (p) { return inF.indexOf(p) === -1; });
@@ -1226,14 +1228,14 @@ h2.t { font-family: var(--f-display); font-weight: 800; font-size: 20px; margin:
 
   /* ---------- chats ---------- */
   function lastMsg(m) { var l = m.msgs[m.msgs.length - 1]; return l ? (l.imgLost ? '🖼 Photo (not saved)' : l.audioLost ? '🎙 Voice message (not saved)' : l.img ? '🖼 Photo' : (l.audio || l.voice) ? '🎙 Voice message' : l.text) : 'New match. Say salam!'; }
-  function hoursLeft(m) { var h = 48 - Math.floor((Date.now() - m.t) / 3600000); return Math.max(h, 1); }
+  function hoursLeft(m) { var h = 48 - Math.floor((Date.now() - m.t) / 3600000); return Math.max(h, 0); }
   function vChats() {
     var ids = Object.keys(S.matches).sort(function (a, b) { return S.matches[b].t - S.matches[a].t; });
     var s = '<div class="scroll"><h2 class="t">Messages</h2>';
     if (!ids.length) return s + '<div class="empty"><span class="empty-ic">💬</span><b>No messages yet</b><span>When you match, your conversations start here.</span><button class="btn" data-act="tab" data-v="discover">Go to Marriage</button></div></div>';
     s += ids.map(function (k) {
       var p = byId(+k), m = S.matches[k], mine = m.msgs.some(function (x) { return x.f === 'me'; });
-      return '<button class="crow" data-act="mchat" data-id="' + p.id + '"><div class="ph" data-act="open" data-id="' + p.id + '">' + photo(p) + '</div><div class="tx"><div class="nm">' + esc(p.name) + (p.ver ? '<span class="vbadge">' + ic('check') + '</span>' : '') + '</div><div class="pv">' + esc(lastMsg(m)) + '</div>' + (!mine ? '<div class="left">First message: ' + pd(hoursLeft(m)) + ' h left</div>' : '') + '</div>' + (m.unread ? '<span class="unread" aria-label="New message"></span>' : '') + '</button>';
+      return '<button class="crow" data-act="mchat" data-id="' + p.id + '"><div class="ph" data-act="open" data-id="' + p.id + '">' + photo(p) + '</div><div class="tx"><div class="nm">' + esc(p.name) + (p.ver ? '<span class="vbadge">' + ic('check') + '</span>' : '') + '</div><div class="pv">' + esc(lastMsg(m)) + '</div>' + (!mine ? (hoursLeft(m) > 0 ? '<div class="left">First message: ' + pd(hoursLeft(m)) + ' h left</div>' : '<div class="left" style="color:var(--danger)">Expired</div>') : '') + '</div>' + (m.unread ? '<span class="unread" aria-label="New message"></span>' : '') + '</button>';
     }).join('');
     return s + '</div>';
   }
@@ -1251,6 +1253,7 @@ h2.t { font-family: var(--f-display); font-weight: 800; font-size: 20px; margin:
     closeSheet(); var mc = app.querySelector('.match'); if (mc) mc.remove();
     S.chat = id; m.unread = 0; S.warn = null; API.markRead(id).catch(function () {});
     var old = app.querySelector('.layer'); if (old) old.remove();
+    var wfHold = (me.g === 'm' && p.g === 'f' && p.womenFirst && !m.msgs.some(function (x) { return x.f === 'them'; }));
     var l = document.createElement('div'); l.className = 'layer'; l.setAttribute('role', 'dialog'); l.setAttribute('aria-label', 'Chat with ' + p.name);
     l.innerHTML = '<div class="chead"><button class="icon-btn" data-act="chatclose" aria-label="Back">' + ic('back', 'flip') + '</button><div class="ph">' + photo(p) + '</div><div class="nm">' + esc(p.name) + (p.ver ? ' <span class="vbadge" style="display:inline-grid">' + ic('check') + '</span>' : '') + '<small>' + (p.online ? 'Online' : 'Active a while ago') + '</small></div>' +
       (API.features.calls ? '<button class="icon-btn" data-act="call" data-k="voice" data-id="' + id + '" aria-label="Voice call">' + ic('phone') + '</button><button class="icon-btn" data-act="call" data-k="video" data-id="' + id + '" aria-label="Video call">' + ic('video') + '</button>' : '') +
@@ -1258,12 +1261,12 @@ h2.t { font-family: var(--f-display); font-weight: 800; font-size: 20px; margin:
       '<div class="banner" id="cban">' + ic('shield') + '<div>For your safety: do not share your personal number, address or money. Report suspicious behaviour.</div></div>' +
       '<div class="msgs" id="msgs" aria-live="polite"></div><div id="cwarn"></div>' +
       '<div class="ice" id="ice"></div><div id="recbar"></div>' +
-      '<form class="compose" id="cform"><button type="button" class="icon-btn" data-act="voice" aria-label="Voice message">' + ic('mic') + '</button><label class="icon-btn" style="cursor:pointer" aria-label="Send a photo">' + ic('image') + '<input type="file" id="chatimg" accept="image/*" hidden></label><input id="cin" placeholder="Write a message…" autocomplete="off" aria-label="Message"><button class="icon-btn" style="background:var(--brand);color:var(--on-brand);border:0" aria-label="Send">' + ic('send') + '</button></form>';
+      (wfHold ? '<div class="sysmsg" style="margin:10px">She sends the first message — please wait for her to write first.</div>' : '<form class="compose" id="cform"><button type="button" class="icon-btn" data-act="voice" aria-label="Voice message">' + ic('mic') + '</button><label class="icon-btn" style="cursor:pointer" aria-label="Send a photo">' + ic('image') + '<input type="file" id="chatimg" accept="image/*" hidden></label><input id="cin" placeholder="Write a message…" autocomplete="off" aria-label="Message"><button class="icon-btn" style="background:var(--brand);color:var(--on-brand);border:0" aria-label="Send">' + ic('send') + '</button></form>');
     app.appendChild(l);
     msgsRender();
-    l.querySelector('#cform').addEventListener('submit', function (e) { e.preventDefault(); var i = l.querySelector('#cin'); sendMsg(i.value); });
+    var cf = l.querySelector('#cform'); if (cf) cf.addEventListener('submit', function (e) { e.preventDefault(); var i = l.querySelector('#cin'); sendMsg(i.value); });
     var cin = l.querySelector('#cin'), typLast = 0;
-    cin.addEventListener('input', function () { if (API.local || !API.typing) return; var now = Date.now(); if (now - typLast < 3000) return; typLast = now; API.typing(id).catch(function () {}); });
+    if (cin) cin.addEventListener('input', function () { if (API.local || !API.typing) return; var now = Date.now(); if (now - typLast < 3000) return; typLast = now; API.typing(id).catch(function () {}); });
     render();
   }
   function msgsRender() {
@@ -1292,6 +1295,7 @@ h2.t { font-family: var(--f-display); font-weight: 800; font-size: 20px; margin:
   function sendMsg(text, force) {
     text = (text || '').trim(); if (!text) return;
     var m = S.matches[S.chat], p = byId(S.chat), w = document.getElementById('cwarn');
+    if (m && p && me.g === 'm' && p.g === 'f' && p.womenFirst && !m.msgs.some(function (x) { return x.f === 'them'; })) { toast('She sends the first message.'); return; }
     if (!force && RISK.test(text)) {
       w.innerHTML = '<div class="banner warn">' + ic('shield') + '<div>You are about to send a phone number or link. For your safety, wait until you know each other better. <button data-act="sendanyway" data-t="' + esc(text) + '">Send anyway</button><button data-act="cancelwarn">Cancel</button></div></div>'; return;
     }
@@ -1693,7 +1697,29 @@ h2.t { font-family: var(--f-display); font-weight: 800; font-size: 20px; margin:
   }
 
   /* ---------- onboarding ---------- */
+  function saveOnbStep() {
+    // read the current step's inputs into me (no validation - Back never blocks)
+    var g = function (id) { var el = document.getElementById(id); return el ? el.value : null; };
+    if (S.onbStep === 2) {
+      var nm = (g('on') || '').trim(), ln = (g('oln') || '').trim(), ag = +g('oa'), ct = g('oct');
+      if (nm) me.name = nm.slice(0, 24); if (ln) me.lastName = ln.slice(0, 24); if (ag) me.age = Math.min(120, ag); if (ct) me.country = ct; me.state = (g('opr') || '').trim().slice(0, 40);
+    }
+    if (S.onbStep === 3) {
+      me.job = (g('oj') || '').trim().slice(0, 30); me.edu = g('oed') || me.edu; me.height = Math.max(0, Math.min(220, +g('oh') || 0));
+    }
+    if (S.onbStep === 4) {
+      me.about = (g('oab') || '').trim().slice(0, 140); me.dress = g('odress') || me.dress; me.diet = g('odiet') || me.diet;
+    }
+    if (S.onbStep === 5) {
+      me.bornMuslim = bornSel(g('oborn') || ''); me.sect = g('osect') || me.sect; me.ethnicity = g('oeth') || me.ethnicity; me.nationality = g('onat') || me.nationality; me.grewUp = g('ogrew') || me.grewUp; me.parents = (g('opar') || '').trim().slice(0, 80); me.top3 = (g('otop3') || '').trim().slice(0, 120);
+    }
+    if (S.onbStep === 7) {
+      me.q = PROMPT_QS.map(function (q, i) { var a = (g('opq' + i) || '').trim().slice(0, 120); return a ? [q, a] : null; }).filter(function (x) { return !!x; });
+    }
+    saveMe();
+  }
   function renderOnb() {
+    if (!me.done && !API.local) { try { lsSet('hamdam-onb', JSON.stringify({ me: me, step: S.onbStep })); } catch (e) {} }
     var st = S.onbStep, h = '<div class="onb"><div class="dots">' + [0, 1, 2, 3, 4, 5, 6, 7, 8].map(function (i) { return '<i class="' + (i <= st ? 'on' : '') + '"></i>'; }).join('') + '</div><div class="body">';
     if (st === 0) h += '<div class="welcome">' + logoSvg('big').replace('<svg class="big"', '<svg class="big" style="color:var(--brand)"') + '<h1>Hamdam</h1><p>A safe place for real friendship and halal marriage.</p><div class="feat">' + [['shield', 'Verified profiles and reporting'], ['users', 'Real people, real intentions'], ['lock', 'Photo hidden until approved'], ['heart', 'Friendship or marriage, your choice']].map(function (f) { return '<div>' + ic(f[0]) + '<span>' + f[1] + '</span></div>'; }).join('') + '</div></div>';
     if (st === 1) h += '<h2 class="t">I am</h2><div class="choice"><button class="pick" data-act="og" data-v="m" aria-pressed="' + (me.g === 'm') + '">Man</button><button class="pick" data-act="og" data-v="f" aria-pressed="' + (me.g === 'f') + '">Woman</button></div><h2 class="t" style="margin-top:20px">I am looking for</h2><div class="choice three">' + [['marriage', 'Marriage', 'Serious, to build a family'], ['friends', 'Friendship', 'New people and good conversation'], ['both', 'Both', 'Talk first, then see']].map(function (x) { return '<button class="pick" data-act="oi" data-v="' + x[0] + '" aria-pressed="' + (me.intent === x[0]) + '">' + x[1] + '<small>' + x[2] + '</small></button>'; }).join('') + '</div><div id="onerr1" class="banner warn" style="display:none;margin-top:12px"></div>';
@@ -1913,7 +1939,7 @@ h2.t { font-family: var(--f-display); font-weight: 800; font-size: 20px; margin:
       if (!r.authed) { renderAuth(); return; }
       clearAuth();
       if (!API.local) {
-        if (r.me) { for (var k in r.me) me[k] = r.me[k]; me.done = true; } else me.done = false;
+        if (r.me) { for (var k in r.me) me[k] = r.me[k]; me.done = true; } else { me.done = false; try { var onb = JSON.parse(lsGet('hamdam-onb') || 'null'); if (onb && onb.me) { for (var k in onb.me) me[k] = onb.me[k]; if (onb.step != null) S.onbStep = Math.min(8, Math.max(0, +onb.step || 0)); } } catch (e) {} }
         S.complimentsReceived = r.compliments || 0;
         var st = r.state || {};
         S.matches = st.matches || {}; S.blocked = st.blocked || {}; S.blockedUsers = st.blockedUsers || []; S.acted = st.acted || {}; S.unlocked = st.unlocked || {}; S.notifs = st.notifs || [];
@@ -1950,17 +1976,17 @@ h2.t { font-family: var(--f-display); font-weight: 800; font-size: 20px; margin:
         act(id || topId(), a); break;
       case 'rewind':
         if (!me.gold) { goldSheet(); break; }
-        API.undo().then(function (r) { var last = r && r.id; if (last) { delete S.acted[last]; delete S.matches[last]; render(); toast('Brought back'); } else toast('Nothing to rewind'); }).catch(function (e) { toast(errText(e)); });
+        API.undo().then(function (r) { var last = r && r.id; if (last) { delete S.acted[last]; delete S.matches[last]; S.history = S.history.filter(function (x) { return x !== last; }); render(); toast('Brought back'); } else toast('Nothing to rewind'); }).catch(function (e) { toast(errText(e)); });
         break;
-      case 'open': openProfile(id); break;       case 'viewphoto': photoViewer(id, 0); break;       case 'viewmyphoto': viewMyPhoto(0); break;       case 'myphprev': viewMyPhoto((v || 0) - 1); break;       case 'myphnext': viewMyPhoto((v || 0) + 1); break;       case 'myprofile': myProfile(); break;       case 'myproftab': S.myProfTab = v; myProfile(); break;       case 'voiceintro': toast('Voice intro is coming soon'); break;       case 'phprev': photoViewer(id, (v || 0) - 1); break;       case 'phnext': photoViewer(id, (v || 0) + 1); break;       case 'phclose': var pvEl = app.querySelector('.phview'); if (pvEl) pvEl.remove(); break;
+      case 'open': openProfile(id); break;       case 'viewphoto': photoViewer(id, 0); break;       case 'viewmyphoto': viewMyPhoto(+(b.dataset.i || 0)); break;       case 'myphprev': viewMyPhoto((v || 0) - 1); break;       case 'myphnext': viewMyPhoto((v || 0) + 1); break;       case 'myprofile': myProfile(); break;       case 'myproftab': S.myProfTab = v; myProfile(); break;       case 'voiceintro': toast('Voice intro is coming soon'); break;       case 'phprev': photoViewer(id, (v || 0) - 1); break;       case 'phnext': photoViewer(id, (v || 0) + 1); break;       case 'phclose': var pvEl = app.querySelector('.phview'); if (pvEl) pvEl.remove(); break;
       case 'closesheet': closeSheet(); break;
-      case 'filters': if (!me.gold) { startGold(function () { filtersSheet(); }); } else filtersSheet(); break;
+      case 'filters': filtersSheet(); break;
       case 'goldfilters': filtersSheet(); break;
       case 'revealfilters': if (!me.gold) { startGold(function () { revealSheet(id); }); } else revealSheet(id); break;
       case 'compliment': complimentSheet(id); break;
       case 'complimentpick': { var ci = document.getElementById('comptxt'); if (ci) ci.value = b.dataset.t; break; }
       case 'sendcompliment': var ct = (document.getElementById('comptxt').value || '').trim(); if (!ct) { toast('Write a compliment first.'); break; } act(id, 'like', ct.slice(0, 120)); break;
-      case 'sort': if (!me.gold) { startGold(function () { sortSheet(); }); } else sortSheet(); break;
+      case 'sort': if (!me.gold) { goldSheet(); break; } sortSheet(); break;
       case 'setsort': if (!me.gold) { startGold(function () { sortSheet(); }); break; } S.sort = v; closeSheet(); render(); break;
       case 'extab': S.exploreTab = v; render(); break;
       case 'resethistory': if (API.resetHistory) { API.resetHistory().then(function () { S.acted = {}; S.history = []; saveS(); render(); toast('Swipe history cleared'); }).catch(function (e) { toast(errText(e)); }); } else { S.acted = {}; S.history = []; saveS(); render(); toast('Swipe history cleared'); } break;
@@ -1977,9 +2003,9 @@ h2.t { font-family: var(--f-display); font-weight: 800; font-size: 20px; margin:
       case 'adminresolve': API.adminResolve(id).then(function () { toast('Report resolved'); closeSheet(); adminSheet(); }).catch(function (e) { toast(errText(e)); }); break;
       case 'adminban': API.adminBan(id).then(function () { toast('User banned'); closeSheet(); adminSheet(); }).catch(function (e) { toast(errText(e)); }); break;
       case 'blocked': blockedSheet(); break;
-      case 'unblock': API.unblock(id).catch(function (e) { toast(errText(e)); }); delete S.blocked[id]; closeSheet(); blockedSheet(); toast('Unblocked'); refreshData().then(render).catch(function () {}); break;
+      case 'unblock': API.unblock(id).catch(function (e) { toast(errText(e)); }); delete S.blocked[id]; S.blockedUsers = (S.blockedUsers || []).filter(function (x) { return x.id !== id; }); closeSheet(); blockedSheet(); toast('Unblocked'); refreshData().then(render).catch(function () {}); break;
       case 'gold': goldSheet(); break;
-      case 'goldon': startGold(function () { closeSheet(); render(); }); break;
+      case 'goldon': if (me.gold) { closeSheet(); break; } startGold(function () { closeSheet(); render(); }); break;
       case 'boost': if (!me.gold) { goldSheet(); break; } API.boost().then(function (r) { if (r && r.until) { me.boostUntil = r.until; saveMe(); } toast('Boosted for 3 hours ✓'); render(); }).catch(function (e) { toast(errText(e)); }); break;
       case 'mchat': chatOpen(id); break;
       case 'mclose': var mm = app.querySelector('.match'); if (mm) mm.remove(); break;
@@ -1987,7 +2013,7 @@ h2.t { font-family: var(--f-display); font-weight: 800; font-size: 20px; margin:
       case 'notifs': notifsSheet(); break;
       case 'settings': S.tab = 'settings'; render(); break;
       case 'shareme': shareSheet(); break;
-      case 'unmatch': API.unmatch(id).catch(function (e) { toast(errText(e)); }); delete S.matches[id]; delete S.acted[id]; S.history = S.history.filter(function (x) { return x !== id; }); closeSheet(); var ly2 = app.querySelector('.layer'); if (ly2) ly2.remove(); S.chat = 0; toast('Unmatched'); render(); break;
+      case 'unmatch': API.unmatch(id).catch(function (e) { toast(errText(e)); }); delete S.matches[id]; S.history = S.history.filter(function (x) { return x !== id; }); closeSheet(); var ly2 = app.querySelector('.layer'); if (ly2) ly2.remove(); S.chat = 0; toast('Unmatched'); render(); break;
       case 'call': if (API.features.calls) startCall(id, b.dataset.k || 'voice'); else toast('Calls are not active yet.'); break;
       case 'endcall': endCall(true); break;
       case 'callaccept': acceptCall(); break;
@@ -2010,7 +2036,7 @@ h2.t { font-family: var(--f-display); font-weight: 800; font-size: 20px; margin:
       case 'reportmenu': reportSheet(id || S.chat); break;
       case 'report': API.report(id, b.textContent.trim()).then(function () { toast('Thank you. We will review it.'); }).catch(function (e) { toast(errText(e)); }); closeSheet(); break;
       case 'sendproblem': { var pt = document.getElementById('probtext'), pc = document.getElementById('probcat'); var tv = pt ? pt.value.trim() : ''; if (!tv) { toast('Please describe the problem first.'); break; } API.reportProblem(tv, pc ? pc.value : 'other').then(function () { closeSheet(); toast('Thank you. We will look into it.'); }).catch(function (e) { toast(errText(e)); }); break; }
-      case 'block': API.block(id).catch(function (e) { toast(errText(e)); }); S.blocked[id] = 1; delete S.matches[id]; closeSheet(); var ly = app.querySelector('.layer'); if (ly) ly.remove(); S.chat = 0; toast('Blocked'); render(); break;
+      case 'block': API.block(id).catch(function (e) { toast(errText(e)); }); S.blocked[id] = 1; delete S.matches[id]; delete S.acted[id]; S.history = S.history.filter(function (x) { return x !== id; }); closeSheet(); var ly = app.querySelector('.layer'); if (ly) ly.remove(); S.chat = 0; toast('Blocked'); render(); break;
       case 'reqphoto': closeSheet(); API.requestPhoto(id).then(function (r) { if (r && r.status === 'approved') { S.unlocked[id] = 1; toast('Photo request approved'); refreshData().then(function () { openProfile(id); render(); }).catch(function () { openProfile(id); render(); }); } else toast('Photo request sent'); }).catch(function (e) { toast(errText(e)); }); break;
       case 'toggle': var k = b.dataset.k; me[k] = !me[k]; if (k === 'dist' && !me.dist) { me.lat = null; me.lng = null; me.loc = false; } saveMe(); if (k === 'dist' && me.dist && !me.loc) { if (navigator.geolocation) { navigator.geolocation.getCurrentPosition(function (pos) { me.lat = pos.coords.latitude; me.lng = pos.coords.longitude; me.loc = true; saveMe(); }, function () { toast('Location not shared — distances will not show.'); }, { timeout: 10000 }); } else { toast('Location is not available on this device — distances will not show.'); } } if (!me.done) { b.setAttribute('aria-checked', !!me[k]); } else { var sh = app.querySelector('.sheet'); if (sh) { b.setAttribute('aria-checked', !!me[k]); } render(); } break;
       case 'travelset': { var tvc = (document.getElementById('tvcity').value || '').trim().slice(0, 40); var tvco = document.getElementById('tvcountry').value || ''; if (!tvc || !tvco) { toast('Enter a city and choose a country'); break; } me.travel = { city: tvc, country: tvco, state: '', until: Date.now() + 24 * 3600000 }; saveMe(); render(); toast('Travel mode on for 24 hours'); break; }
@@ -2038,12 +2064,12 @@ h2.t { font-family: var(--f-display); font-weight: 800; font-size: 20px; margin:
       case 'orplan': me.relocationPlans = v; renderOnb(); break;
       case 'ofplan': me.familyPlans = v; renderOnb(); break;
       case 'opoly': me.polygamy = v; renderOnb(); break;
-      case 'ofaith': me.faith = me.faith || []; var i3 = me.faith.indexOf(b.dataset.t); if (i3 > -1) me.faith.splice(i3, 1); else me.faith.push(b.dataset.t); b.setAttribute('aria-pressed', i3 === -1); break;
+      case 'ofaith': me.faith = me.faith || []; var i3 = me.faith.indexOf(b.dataset.t); if (i3 > -1) me.faith.splice(i3, 1); else if (me.faith.length >= 3) { toast('You can choose up to 3'); break; } else me.faith.push(b.dataset.t); b.setAttribute('aria-pressed', i3 === -1); break;
       case 'olang': var lg = (me.langs || '').split(/,/).map(function (x) { return x.trim(); }).filter(Boolean); var i4 = lg.indexOf(b.dataset.t); if (i4 > -1) lg.splice(i4, 1); else lg.push(b.dataset.t); me.langs = lg.join(', '); b.setAttribute('aria-pressed', i4 === -1); break;
       case 'opers': me.personality = me.personality || []; var i5 = me.personality.indexOf(b.dataset.t); if (i5 > -1) me.personality.splice(i5, 1); else if (me.personality.length >= 3) { toast('You can choose up to 3'); break; } else me.personality.push(b.dataset.t); b.setAttribute('aria-pressed', i5 === -1); break;
       case 'delonbph': me.photos.splice(+b.dataset.i, 1); saveMe(); renderOnb(); toast('Photo deleted'); break;
       case 'otag': var i2 = me.int.indexOf(b.dataset.t); if (i2 > -1) me.int.splice(i2, 1); else if (me.int.length >= 3) { toast('You can choose up to 3 interests'); break; } else me.int.push(b.dataset.t); b.setAttribute('aria-pressed', i2 === -1); break;
-      case 'oback': S.onbStep = Math.max(0, S.onbStep - 1); renderOnb(); break;
+      case 'oback': saveOnbStep(); S.onbStep = Math.max(0, S.onbStep - 1); renderOnb(); break;
       case 'onext':
         if (S.onbStep === 1) {
           var er1 = document.getElementById('onerr1');
@@ -2075,7 +2101,7 @@ h2.t { font-family: var(--f-display); font-weight: 800; font-size: 20px; margin:
         if (S.onbStep === 8) {
           if (me.photos.length < 3) { var er6 = document.getElementById('onberr'); er6.style.display = 'flex'; er6.className = 'banner warn'; er6.textContent = 'Add at least 3 real photos to continue.'; return; }
         }
-        if (S.onbStep < 8) { S.onbStep++; renderOnb(); } else { me.done = true; saveMe(); S.tab = 'discover'; var wlc = me.name === 'You' ? 'Welcome!' : 'Welcome, ' + me.name; (API.local ? Promise.resolve() : API.saveMe(me)).then(refreshData).then(function () { render(); toast(wlc); }).catch(function (e) { me.done = false; renderOnb(); toast(errText(e)); }); }
+        if (S.onbStep < 8) { S.onbStep++; renderOnb(); } else { me.done = true; lsDel('hamdam-onb'); saveMe(); S.tab = 'discover'; var wlc = me.name === 'You' ? 'Welcome!' : 'Welcome, ' + me.name; (API.local ? Promise.resolve() : API.saveMe(me)).then(refreshData).then(function () { render(); toast(wlc); }).catch(function (e) { me.done = false; renderOnb(); toast(errText(e)); }); }
         break;
     }
   });
@@ -2126,9 +2152,9 @@ h2.t { font-family: var(--f-display); font-weight: 800; font-size: 20px; margin:
         si.onload = function () {
           var sc = Math.min(1, 720 / si.width), cv2 = document.createElement('canvas'); cv2.width = Math.round(si.width * sc); cv2.height = Math.round(si.height * sc);
           cv2.getContext('2d').drawImage(si, 0, 0, cv2.width, cv2.height);
-          var dataUrl = cv2.toDataURL('image/jpeg', 0.8); me.ver = 1; closeSheet(); render();
-          var up = API.demo ? Promise.resolve(dataUrl) : uploadToStorage(dataUrl, 'selfie').catch(function () { return dataUrl; });
-          up.then(function (url) { return API.verifyRequest(url); }).catch(function (e) { me.ver = 0; render(); toast(errText(e)); });
+          var dataUrl = cv2.toDataURL('image/jpeg', 0.8);
+          var up = API.demo ? Promise.resolve(dataUrl) : API.uploadToStorage(dataUrl, 'selfie').catch(function () { return dataUrl; });
+          up.then(function (url) { me.ver = 1; saveMe(); closeSheet(); render(); return API.verifyRequest(url); }).then(function () { toast('Verification request sent'); }).catch(function (e) { me.ver = 0; render(); toast(errText(e)); });
         };
         si.src = sr.result;
       };
@@ -2137,9 +2163,8 @@ h2.t { font-family: var(--f-display); font-weight: 800; font-size: 20px; margin:
     if (t.id === 'verifyvideo' && t.files && t.files.length) {
       var vf = t.files[0];
       if (vf.size > 15 * 1024 * 1024) { toast('Video is too large. Keep it under 15 MB.'); t.value = ''; return; }
-      me.ver = 1; closeSheet(); render();
-      var upv = API.demo ? Promise.resolve('demo-video') : uploadVideoToStorage(vf).catch(function () { return null; });
-      upv.then(function (url) { if (!url) { me.ver = 0; render(); toast('Video upload failed. Try again.'); return; } return API.verifyRequest(null, url); }).catch(function (e) { me.ver = 0; render(); toast(errText(e)); });
+      var upv = API.demo ? Promise.resolve('demo-video') : API.uploadVideoToStorage(vf).catch(function () { return null; });
+      upv.then(function (url) { if (!url) { me.ver = 0; render(); toast('Video upload failed. Try again.'); return; } me.ver = 1; saveMe(); closeSheet(); render(); return API.verifyRequest(null, url); }).then(function () { toast('Verification request sent'); }).catch(function (e) { me.ver = 0; render(); toast(errText(e)); });
       t.value = '';
     }
   });
