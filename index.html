@@ -7,7 +7,7 @@
 <style>
 /* Layout: one phone-width app column (centered card on desktop). Top bar, scrolling view, bottom tabs. Sheets, chat and onboarding slide over the column. Identity: Facebook-blue system, clean white cards, heart logo kept, faceless illustrated portraits, no real photos. */
 :root {
-  --bg: #F0F2F5; --surface: #FFFFFF; --ink: #050505; --muted: #65676B; --line: #E4E6EB;
+  --bg: linear-gradient(180deg, #DCE8FB 0%, #F0F2F5 45%, #E9F0FD 100%); --surface: rgba(255, 255, 255, 0.78); --ink: #050505; --muted: #65676B; --line: #E4E6EB;
   --brand: #1877F2; --brand-hover: #166FE5; --on-brand: #FFFFFF; --accent: #0084FF; --gold: #A97F2E; --ok: #31A24C; --warn: #B7791F; --danger: #E41E3F;
   --chip: #F0F2F5; --shadow: 0 2px 12px rgba(0, 0, 0, .12); --shadow-sm: 0 1px 2px rgba(0, 0, 0, .12);
   --f-ui: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, 'Noto Sans Arabic', sans-serif;
@@ -15,13 +15,13 @@
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #18191A; --surface: #242526; --ink: #E4E6EB; --muted: #B0B3B8; --line: #3E4042;
+    --bg: linear-gradient(180deg, #1E2A44 0%, #18191A 45%, #1B2536 100%); --surface: rgba(36, 37, 38, 0.78); --ink: #E4E6EB; --muted: #B0B3B8; --line: #3E4042;
     --brand: #2D88FF; --brand-hover: #4294FF; --on-brand: #FFFFFF; --accent: #0099FF; --gold: #E0BE74; --ok: #31A24C; --warn: #F5C33B; --danger: #F02849;
     --chip: #3A3B3C; --shadow: 0 2px 12px rgba(0, 0, 0, .45); --shadow-sm: 0 1px 2px rgba(0, 0, 0, .4); color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #18191A; --surface: #242526; --ink: #E4E6EB; --muted: #B0B3B8; --line: #3E4042;
+  --bg: linear-gradient(180deg, #1E2A44 0%, #18191A 45%, #1B2536 100%); --surface: rgba(36, 37, 38, 0.78); --ink: #E4E6EB; --muted: #B0B3B8; --line: #3E4042;
   --brand: #2D88FF; --brand-hover: #4294FF; --on-brand: #FFFFFF; --accent: #0099FF; --gold: #E0BE74; --ok: #31A24C; --warn: #F5C33B; --danger: #F02849;
   --chip: #3A3B3C; --shadow: 0 2px 12px rgba(0, 0, 0, .45); --shadow-sm: 0 1px 2px rgba(0, 0, 0, .4); color-scheme: dark;
 }
@@ -176,6 +176,10 @@ h2.t { font-family: var(--f-display); font-weight: 800; font-size: 20px; margin:
 .hero { position: relative; height: 340px; border-radius: 12px 12px 0 0; overflow: hidden; }
 .pbody { padding: 14px 16px 0; display: grid; gap: 14px; }
 .box { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 15px; box-shadow: var(--shadow-sm); }
+/* glass surfaces: frosted translucent cards over the gradient background */
+.top, .tabs, .box, .sheet-panel, .meprof { -webkit-backdrop-filter: blur(14px) saturate(1.3); backdrop-filter: blur(14px) saturate(1.3); }
+.pbar { height: 8px; border-radius: 99px; background: var(--chip); overflow: hidden; }
+.pbar i { display: block; height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--brand), #42A5F5); transition: width .3s ease; }
 .box h4 { margin: 0 0 6px; font-size: 13px; color: var(--muted); font-weight: 700; }
 .box p { margin: 0; }
 .kv { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 14px; }
@@ -1055,6 +1059,27 @@ h2.t { font-family: var(--f-display); font-weight: 800; font-size: 20px; margin:
       '<div class="sticky-act">' + (isM ? '<button class="btn block" data-act="mchat" data-id="' + id + '">Send a message</button>' : acted ? '<button class="btn alt block" disabled>Already decided</button>' : '<button class="act pass" data-act="pass" data-id="' + id + '" aria-label="Pass">' + ic('x') + '</button><button class="btn block" data-act="like" data-id="' + id + '">' + ic('heart') + ' Like</button><button class="act sm" data-act="compliment" data-id="' + id + '" aria-label="Send a compliment">✨</button><button class="act sup" data-act="super" data-id="' + id + '" aria-label="Special like">' + ic('star') + '</button>') + '</div>';
     sheet(html, 'full');
   }
+  function profilePct() {
+    var items = [
+      (me.photos || []).length > 0,
+      !!(me.about || '').trim(),
+      !!(me.job || '').trim(),
+      !!(me.edu || '').trim(),
+      (me.height || 0) > 0,
+      !!(me.marital || '').trim(),
+      !!(me.langs || '').trim(),
+      (me.int || []).length > 0,
+      (me.faith || []).length > 0,
+      (me.q || []).some(function (x) { return x && (x[1] || '').trim(); })
+    ];
+    var done = items.filter(function (x) { return x; }).length;
+    return Math.round(done / items.length * 100);
+  }
+  function profileCompleteHTML() {
+    var pct = profilePct();
+    if (pct >= 100) return '<div class="box" style="margin-top:12px;text-align:center"><b style="color:var(--ok)">✓ Profile complete</b><div class="pbar" style="margin-top:8px"><i style="width:100%"></i></div></div>';
+    return '<div class="box" style="margin-top:12px"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><b>Profile ' + pd(pct) + '% complete</b><button class="btn ghost" style="padding:6px 10px" data-act="editme">Complete it</button></div><div class="pbar" style="margin-top:8px"><i style="width:' + pct + '%"></i></div></div>';
+  }
   function myPreviewHTML() {
     var p = me;
     var html = '';
@@ -1080,6 +1105,7 @@ h2.t { font-family: var(--f-display); font-weight: 800; font-size: 20px; margin:
   }
   function myEditHTML() {
     var html = '';
+    html += profileCompleteHTML();
     html += '<h2 class="t" style="margin-top:16px">Photos</h2><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">' + (me.photos || []).map(function (u, i) { return '<div style="position:relative;aspect-ratio:3/4;border-radius:10px;overflow:hidden"><img src="' + u + '" alt="" data-act="viewmyphoto" style="width:100%;height:100%;object-fit:cover">' + (i === 0 ? '<span style="position:absolute;left:6px;bottom:6px;background:rgba(0,0,0,.65);color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px">Main</span>' : '') + '</div>'; }).join('') + '</div>';
     html += '<button class="btn block" data-act="editme" style="margin-top:8px">Add or change photos</button>';
     if ((me.photos || []).length < 3) html += '<p class="demo-note">3 photos are required — add them in Edit Profile → My photos.</p>';
@@ -1460,6 +1486,7 @@ h2.t { font-family: var(--f-display); font-weight: 800; font-size: 20px; margin:
     var myph = (me.photos && me.photos.length) ? '<img src="' + me.photos[0] + '" alt=""' + (me.blur ? ' class="blurred"' : '') + ' style="width:100%;height:100%;object-fit:cover">' : art(mine);
     var vs = me.ver === 2 ? '<span class="vstate ok">' + ic('check') + ' Verified</span>' : me.ver === 1 ? '<span class="vstate">Under review…</span>' : '<span class="vstate">Not verified</span>';
     var s = '<div class="scroll"><div class="meprof"><div class="ph" role="button" tabindex="0" aria-label="View my photo" data-act="viewmyphoto" style="width:56px;height:56px;cursor:pointer">' + myph + (me.ver === 2 ? '<span class="vbadge" style="position:absolute;right:0;bottom:0;border:2px solid var(--surface)">' + ic('check') + '</span>' : '') + '</div><div style="flex:1;min-width:0"><div class="pname" role="button" tabindex="0" data-act="myprofile" style="color:var(--ink);cursor:pointer">' + esc(me.name) + (me.lastName ? ' ' + esc(me.lastName) : '') + ', ' + pd(me.age) + '</div><div style="color:var(--muted)">' + (me.country ? (flagOf(me.country) ? flagOf(me.country) + ' ' : '') + esc(me.country) : '') + (tr ? ' · ✈ Travelling in ' + esc(tr.city) + ', ' + (flagOf(tr.country) ? flagOf(tr.country) + ' ' : '') + esc(tr.country) : '') + (me.job ? ' · ' + esc(me.job) : '') + '</div>' + (me.about ? '<p style="margin:8px 0 0">' + esc(me.about) + '</p>' : '') + '<div style="margin-top:6px">' + vs + '</div></div><div style="display:flex;align-content:start"><button class="btn" data-act="editme" style="background:linear-gradient(135deg,#1877F2,#E91E63);border:0;box-shadow:0 6px 18px rgba(233,30,99,.35);padding:10px 14px;font-size:15px;white-space:nowrap">✏️ Edit Profile</button></div></div>';
+    s += profileCompleteHTML();
     if (me.ver !== 2) s += '<button class="btn block" style="margin-top:12px" data-act="verify" ' + (me.ver === 1 ? 'disabled' : '') + '>' + ic('shield') + ' Verify your profile</button>';
     
     var lyN = likesYouList().length;
