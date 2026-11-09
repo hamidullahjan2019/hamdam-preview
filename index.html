@@ -233,7 +233,7 @@ h2.t { font-family: var(--f-display); font-weight: 800; font-size: 20px; margin:
 .sw::after { content: ""; position: absolute; top: 3px; inset-inline-start: 3px; width: 22px; height: 22px; border-radius: 50%; background: #fff; transition: inset-inline-start .15s ease; }
 .sw[aria-checked="true"] { background: var(--brand); }
 .sw[aria-checked="true"]::after { inset-inline-start: 23px; }
-.srow { display: flex; align-items: center; gap: 12px; width: 100%; border: 0; border-bottom: 1px solid var(--line); background: transparent; padding: 12px 2px; font-weight: 700; font-size: 15px; text-align: start; color: var(--ink); } .srow:last-child { border-bottom: 0; } .srow .sic { width: 36px; height: 36px; min-width: 36px; border-radius: 50%; display: grid; place-items: center; font-size: 18px; background: #EEF3FB; } .srow .chev { margin-left: auto; color: var(--muted); font-weight: 400; }
+.srow { display: flex; align-items: center; gap: 12px; width: 100%; border: 0; border-bottom: 1px solid var(--line); background: transparent; padding: 12px 2px; font-weight: 700; font-size: 15px; text-align: start; color: var(--ink); } .srow:last-child { border-bottom: 0; } .srow .sic { width: 36px; height: 36px; min-width: 36px; border-radius: 50%; display: grid; place-items: center; background: transparent; } .srow .sic svg { display: block; border-radius: 50%; } .srow .chev { margin-left: auto; color: var(--muted); font-weight: 400; }
 .linkrow { display: flex; align-items: center; justify-content: space-between; width: 100%; border: 0; background: transparent; padding: 13px 2px; border-bottom: 1px solid var(--line); font-weight: 700; text-align: start; }
 .meprof { display: flex; gap: 14px; align-items: center; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 14px; box-shadow: var(--shadow-sm); }
 .meprof .ph { position: relative; width: 78px; height: 78px; border-radius: 50%; overflow: hidden; flex: none; border: 3px solid var(--brand); }
@@ -1403,7 +1403,7 @@ h2.t { font-family: var(--f-display); font-weight: 800; font-size: 20px; margin:
     var tr = activeTravel();
     var myph = (me.photos && me.photos.length) ? '<img src="' + me.photos[0] + '" alt=""' + (me.blur ? ' class="blurred"' : '') + ' style="width:100%;height:100%;object-fit:cover">' : art(mine);
     var vs = me.ver === 2 ? '<span class="vstate ok">' + ic('check') + ' Verified</span>' : me.ver === 1 ? '<span class="vstate">Under review…</span>' : '<span class="vstate">Not verified</span>';
-    var s = '<div class="scroll"><div class="meprof"><div class="ph" role="button" tabindex="0" aria-label="View my photo" data-act="viewmyphoto" style="width:56px;height:56px;cursor:pointer">' + myph + (me.ver === 2 ? '<span class="vbadge" style="position:absolute;right:-2px;bottom:-2px;border:2px solid var(--surface)">' + ic('check') + '</span>' : '') + '</div><div style="flex:1;min-width:0"><div class="pname" style="color:var(--ink)">' + esc(me.name) + (me.lastName ? ' ' + esc(me.lastName) : '') + ', ' + pd(me.age) + (me.incog ? ' <span class="vstate">🔒 Hidden</span>' : '') + '</div><div style="color:var(--muted)">' + (me.country ? (flagOf(me.country) ? flagOf(me.country) + ' ' : '') + esc(me.country) : '') + (tr ? ' · ✈ Travelling in ' + esc(tr.city) + ', ' + (flagOf(tr.country) ? flagOf(tr.country) + ' ' : '') + esc(tr.country) : '') + (me.job ? ' · ' + esc(me.job) : '') + '</div>' + (me.about ? '<p style="margin:8px 0 0">' + esc(me.about) + '</p>' : '') + '<div style="margin-top:6px">' + vs + '</div></div><div style="display:grid;gap:8px;align-content:start"><button class="btn alt" data-act="editme" style="padding:8px 12px">✏️ Edit Profile</button><button class="btn alt" data-act="shareme" style="padding:8px 12px">' + ic('send') + ' Share</button><button class="btn alt" data-act="settings" style="padding:8px 12px">Settings</button></div></div>';
+    var s = '<div class="scroll"><div class="meprof"><div class="ph" role="button" tabindex="0" aria-label="View my photo" data-act="viewmyphoto" style="width:56px;height:56px;cursor:pointer">' + myph + (me.ver === 2 ? '<span class="vbadge" style="position:absolute;right:-2px;bottom:-2px;border:2px solid var(--surface)">' + ic('check') + '</span>' : '') + '</div><div style="flex:1;min-width:0"><div class="pname" style="color:var(--ink)">' + esc(me.name) + (me.lastName ? ' ' + esc(me.lastName) : '') + ', ' + pd(me.age) + (me.incog ? ' <span class="vstate">🔒 Hidden</span>' : '') + '</div><div style="color:var(--muted)">' + (me.country ? (flagOf(me.country) ? flagOf(me.country) + ' ' : '') + esc(me.country) : '') + (tr ? ' · ✈ Travelling in ' + esc(tr.city) + ', ' + (flagOf(tr.country) ? flagOf(tr.country) + ' ' : '') + esc(tr.country) : '') + (me.job ? ' · ' + esc(me.job) : '') + '</div>' + (me.about ? '<p style="margin:8px 0 0">' + esc(me.about) + '</p>' : '') + '<div style="margin-top:6px">' + vs + '</div></div><div style="display:grid;gap:8px;align-content:start"><button class="btn alt" data-act="shareme" style="padding:8px 12px">' + ic('send') + ' Share</button><button class="btn alt" data-act="settings" style="padding:8px 12px">Settings</button></div></div>';
     if (me.ver !== 2) s += '<button class="btn block" style="margin-top:12px" data-act="verify" ' + (me.ver === 1 ? 'disabled' : '') + '>' + ic('shield') + ' Verify your profile</button>';
     
     var lyN = likesYouList().length;
@@ -1536,20 +1536,32 @@ h2.t { font-family: var(--f-display); font-weight: 800; font-size: 20px; margin:
     var p = byId(id); if (!p) return;
     sheet('<h3>Send a Compliment</h3><p class="auth-sub">A kind word for ' + esc(p.name) + '. If you match, it will be the first message in your chat.</p><div class="tagrow">' + COMPLIMENTS.map(function (c) { return '<button type="button" data-act="complimentpick" data-t="' + esc(c) + '">' + esc(c) + '</button>'; }).join('') + '</div><div class="field" style="margin-top:12px"><label for="comptxt">Or write your own</label><input id="comptxt" maxlength="120" placeholder="Write a kind compliment..."></div><div class="row2" style="margin-top:12px"><button class="btn" data-act="sendcompliment" data-id="' + id + '">Send</button><button class="btn ghost" data-act="closesheet">Cancel</button></div>');
   }
+  function brandIcon(kind) {
+    var g = {
+      wa: '<g transform="translate(6,6)"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z" fill="#fff"/></g>',
+      fb: '<text x="18" y="25" font-size="20" font-weight="bold" fill="#fff" text-anchor="middle" font-family="Arial,sans-serif">f</text>',
+      tg: '<g transform="translate(6,6)"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" fill="#fff"/></g>',
+      x: '<text x="18" y="25" font-size="17" font-weight="bold" fill="#fff" text-anchor="middle" font-family="Arial,sans-serif">X</text>',
+      mail: '<g transform="translate(6,6)"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" fill="#fff"/></g>',
+      link: '<g transform="translate(6,6)"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z" fill="#fff"/></g>'
+    };
+    var bg = { wa: '#25D366', fb: '#1877F2', tg: '#229ED9', x: '#000000', mail: '#5f6368', link: '#5f6368' }[kind] || '#5f6368';
+    return '<svg viewBox="0 0 36 36" width="36" height="36"><circle cx="18" cy="18" r="18" fill="' + bg + '"/>' + (g[kind] || '') + '</svg>';
+  }
   function shareSheet() {
     var shTxt = 'Find me on Hamdam — ' + (me.name + (me.lastName ? ' ' + me.lastName : '')) + (me.country ? ' (' + me.country + ')' : '');
     var shUrl = location.href.split('#')[0];
     var full = shTxt + ' ' + shUrl;
+    if (navigator.share) { navigator.share({ title: 'Hamdam', text: shTxt, url: shUrl }).catch(function () {}); return; }
     var rows = [
-      ['💬', 'WhatsApp', 'https://wa.me/?text=' + encodeURIComponent(full)],
-      ['📘', 'Facebook', 'https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(shUrl)],
-      ['✈️', 'Telegram', 'https://t.me/share/url?url=' + encodeURIComponent(shUrl) + '&text=' + encodeURIComponent(shTxt)],
-      ['𝕏', 'X', 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(full)],
-      ['✉️', 'Email', 'mailto:?subject=' + encodeURIComponent('Find me on Hamdam') + '&body=' + encodeURIComponent(full)],
-      ['🔗', 'Copy link', 'copy'],
-      ['⋯', 'More options', 'native']
+      ['wa', 'WhatsApp', 'https://wa.me/?text=' + encodeURIComponent(full)],
+      ['fb', 'Facebook', 'https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(shUrl)],
+      ['tg', 'Telegram', 'https://t.me/share/url?url=' + encodeURIComponent(shUrl) + '&text=' + encodeURIComponent(shTxt)],
+      ['x', 'X', 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(full)],
+      ['mail', 'Email', 'mailto:?subject=' + encodeURIComponent('Find me on Hamdam') + '&body=' + encodeURIComponent(full)],
+      ['link', 'Copy link', 'copy']
     ];
-    sheet('<h3>Share my profile</h3>' + rows.map(function (r) { return '<button class="srow" data-act="shareto" data-v="' + r[2] + '"><span class="sic">' + r[0] + '</span><span>' + r[1] + '</span><span class="chev">›</span></button>'; }).join('') + '<p class="demo-note" style="margin-top:12px">Instagram has no direct share link — use Copy link and paste it in Instagram, or More options to share to Instagram from your phone.</p>');
+    sheet('<h3>Share my profile</h3>' + rows.map(function (r) { return '<button class="srow" data-act="shareto" data-v="' + r[2] + '"><span class="sic">' + brandIcon(r[0]) + '</span><span>' + r[1] + '</span><span class="chev">›</span></button>'; }).join('') + '<p class="demo-note" style="margin-top:12px">Instagram has no direct share link — use Copy link and paste it in Instagram.</p>');
   }
   function doShare(v) {
     var shTxt = 'Find me on Hamdam — ' + (me.name + (me.lastName ? ' ' + me.lastName : '')) + (me.country ? ' (' + me.country + ')' : '');
