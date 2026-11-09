@@ -812,7 +812,7 @@ h2.t { font-family: var(--f-display); font-weight: 800; font-size: 20px; margin:
     if (p.ver) s += 3;
     return { s: Math.min(98, s), why: why };
   }
-  function filtersActive() { if (!me.gold) return false; var f = S.f, g = S.fg; return f.min !== 18 || f.max !== 45 || f.country || f.state || f.nationality || f.hmin || f.hmax || f.marital || f.children || f.grewUp || f.lang || f.edu || f.profession || f.int || f.marriagePlans || f.relocationPlans || f.familyPlans || f.prayer || f.dress || f.diet || f.smoke || f.drink || f.sect || f.ethnicity || g.liked || g.bio || g.online || g.goldMember || g.justJoined || g.priv || g.ver || g.born || S.fmode === 'gold'; }
+  function filtersActive() { var f = S.f, g = S.fg; if (!me.gold) return f.min !== 18 || f.max !== 45 || f.country || f.marital || f.prayer || f.edu; return f.min !== 18 || f.max !== 45 || f.country || f.state || f.nationality || f.hmin || f.hmax || f.marital || f.children || f.grewUp || f.lang || f.edu || f.profession || f.int || f.marriagePlans || f.relocationPlans || f.familyPlans || f.prayer || f.dress || f.diet || f.smoke || f.drink || f.sect || f.ethnicity || g.liked || g.bio || g.online || g.goldMember || g.justJoined || g.priv || g.ver || g.born || S.fmode === 'gold'; }
   function passesFilters(p, flt, likedFn) {
     var f = flt.f, g = flt.fg;
     if (p.age < f.min || p.age > f.max) return false;
@@ -870,7 +870,7 @@ h2.t { font-family: var(--f-display); font-weight: 800; font-size: 20px; margin:
       if (p.g !== want || S.acted[p.id] || S.blocked[p.id]) return false;
       if (S.intentTab === 'marriage' && p.intent === 'friends') return false;
       if (S.intentTab === 'friends' && p.intent === 'marriage') return false;
-      if (me.gold && !passesFilters(p, { f: S.f, fg: S.fg, fmode: 'gold' })) return false;
+      if (!passesFilters(p, { f: S.f, fg: S.fg, fmode: S.fmode })) return false;
       return true;
     });
     out.sort(sortFn());
@@ -1505,7 +1505,15 @@ h2.t { font-family: var(--f-display); font-weight: 800; font-size: 20px; margin:
   function filtersSheet() {
     var f = S.f, g = S.fg;
     if (!me.gold) {
-      sheet('<h3>Filters</h3><div class="box"><p>Filters are a Gold feature. Get Gold to filter by age, location, faith, plans and more.</p></div><div class="row2" style="margin-top:12px"><button class="btn" data-act="goldonf">⭐ Get Gold</button><button class="btn ghost" data-act="closesheet">Later</button></div>');
+      sheet('<h3>Filters</h3>' +
+        '<p class="demo-note" style="text-align:start;padding:0 0 10px">Simple filters — only people who match these will appear.</p>' +
+        '<div class="row2"><div class="field"><label for="fmin">Minimum age</label><input id="fmin" type="number" min="18" max="120" value="' + f.min + '"></div><div class="field"><label for="fmax">Maximum age</label><input id="fmax" type="number" min="18" max="120" value="' + f.max + '"></div></div>' +
+        '<div class="field"><label for="fcountry">Country</label><select id="fcountry"><option value="">All countries</option>' + COUNTRIES.map(function (c) { return '<option value="' + c + '"' + (f.country === c ? ' selected' : '') + '>' + flagOf(c) + ' ' + c + '</option>'; }).join('') + '</select></div>' +
+        '<div class="field"><label for="fmarital">Marital status</label><select id="fmarital"><option value="">All</option>' + Object.keys(MARITAL).map(function (k) { return '<option value="' + k + '"' + (f.marital === k ? ' selected' : '') + '>' + MARITAL[k] + '</option>'; }).join('') + '</select></div>' +
+        '<div class="field"><label for="fpr">Level of practice</label><select id="fpr"><option value="">All</option>' + Object.keys(PRAYER).map(function (k) { return '<option value="' + k + '"' + (f.prayer === k ? ' selected' : '') + '>' + PRAYER[k] + '</option>'; }).join('') + '</select></div>' +
+        '<div class="field"><label for="fedu">Education</label><select id="fedu"><option value="">All</option>' + EDU_OPTS.map(function (e) { return e ? '<option value="' + e + '"' + (f.edu === e ? ' selected' : '') + '>' + e + '</option>' : ''; }).join('') + '</select></div>' +
+        '<div class="row2" style="margin-top:16px"><button class="btn" data-act="applysf">Apply</button><button class="btn ghost" data-act="resetf">Clear</button></div>' +
+        '<button class="btn ghost block" style="margin-top:10px" data-act="goldonf">⭐ Get Gold for all filters</button>');
       return;
     }
     sheet('<h3>Filters</h3>' +
@@ -1933,8 +1941,9 @@ h2.t { font-family: var(--f-display); font-weight: 800; font-size: 20px; margin:
       case 'goldonf': startGold(function () { filtersSheet(); }); break;
       case 'goldchat': startGold(function () { chatOpen(id); }); break;
       case 'fvertoggle': if (!me.gold) break; b.setAttribute('aria-checked', b.getAttribute('aria-checked') !== 'true'); break;
+      case 'applysf': S.f = { min: +document.getElementById('fmin').value || 18, max: +document.getElementById('fmax').value || 45, country: document.getElementById('fcountry').value, state: '', nationality: '', hmin: 0, hmax: 0, marital: document.getElementById('fmarital').value, children: '', grewUp: '', lang: '', edu: document.getElementById('fedu').value, profession: '', int: false, marriagePlans: '', relocationPlans: '', familyPlans: '', prayer: document.getElementById('fpr').value, dress: '', diet: '', smoke: '', drink: '', sect: '', ethnicity: '' }; S.fg = { liked: false, bio: false, online: false, goldMember: false, justJoined: false, priv: false, ver: false, born: false }; S.fmode = 'simple'; saveMyFilters(); closeSheet(); render(); break;
       case 'applyf': S.f = { min: +document.getElementById('fmin').value || 18, max: +document.getElementById('fmax').value || 80, country: document.getElementById('fcountry').value, state: (document.getElementById('fstate').value || '').trim().slice(0, 40), nationality: document.getElementById('fnat').value, hmin: +document.getElementById('fhmin').value || 0, hmax: +document.getElementById('fhmax').value || 0, marital: document.getElementById('fmarital').value, children: document.getElementById('fchildren').value, grewUp: document.getElementById('fgrew').value, lang: document.getElementById('flang').value, edu: document.getElementById('fedu').value, profession: (document.getElementById('fprof').value || '').trim().slice(0, 30), int: document.getElementById('fint').getAttribute('aria-checked') === 'true', marriagePlans: document.getElementById('fmplan').value, relocationPlans: document.getElementById('frplan').value, familyPlans: document.getElementById('ffplan').value, prayer: document.getElementById('fpr').value, dress: document.getElementById('fdress').value, diet: document.getElementById('fdiet').value, smoke: document.getElementById('fsmoke').value, drink: document.getElementById('fdrink').value, sect: document.getElementById('fsect').value, ethnicity: document.getElementById('feth').value }; S.fg = { liked: document.getElementById('fliked').getAttribute('aria-checked') === 'true', bio: document.getElementById('fbio').getAttribute('aria-checked') === 'true', online: document.getElementById('fonline').getAttribute('aria-checked') === 'true', goldMember: document.getElementById('fgoldm').getAttribute('aria-checked') === 'true', justJoined: document.getElementById('fjoined').getAttribute('aria-checked') === 'true', priv: document.getElementById('fpriv').getAttribute('aria-checked') === 'true', ver: document.getElementById('fver').getAttribute('aria-checked') === 'true', born: document.getElementById('fborn').getAttribute('aria-checked') === 'true' }; S.fmode = 'gold'; saveMyFilters(); closeSheet(); render(); break;
-      case 'resetf': S.f = { min: 18, max: 45, country: '', state: '', city: '', nationality: '', hmin: 0, hmax: 0, marital: '', children: '', grewUp: '', lang: '', edu: '', profession: '', int: false, marriagePlans: '', relocationPlans: '', familyPlans: '', prayer: '', dress: '', diet: '', smoke: '', drink: '', sect: '', ethnicity: '' }; S.fg = { liked: false, bio: false, online: false, goldMember: false, justJoined: false, priv: false, ver: false, born: false }; S.fmode = 'gold'; S.intentTab = 'all'; me.myFilters = null; saveMe(); closeSheet(); render(); break;
+      case 'resetf': S.f = { min: 18, max: 45, country: '', state: '', city: '', nationality: '', hmin: 0, hmax: 0, marital: '', children: '', grewUp: '', lang: '', edu: '', profession: '', int: false, marriagePlans: '', relocationPlans: '', familyPlans: '', prayer: '', dress: '', diet: '', smoke: '', drink: '', sect: '', ethnicity: '' }; S.fg = { liked: false, bio: false, online: false, goldMember: false, justJoined: false, priv: false, ver: false, born: false }; S.fmode = me.gold ? 'gold' : 'simple'; S.intentTab = 'all'; me.myFilters = null; saveMe(); closeSheet(); render(); break;
       case 'safety': safetySheet(); break;
       case 'admin': adminSheet(); break;
       case 'adminverify': API.adminVerify(id, v === '1').then(function () { toast(v === '1' ? 'Verified ✓' : 'Verification rejected'); closeSheet(); adminSheet(); }).catch(function (e) { toast(errText(e)); }); break;
