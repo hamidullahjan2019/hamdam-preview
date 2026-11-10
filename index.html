@@ -670,6 +670,7 @@ h2.t { font-family: var(--f-display); font-weight: 800; font-size: 20px; margin:
   function addLang(l, w) { var lg = langList(); if (lg.indexOf(l) === -1) { lg.push(l); me.langs = lg.join(', '); } renderLangChips(w); renderLangSug(w); }
   function langSearchInput(inp, w) { renderLangSug(w); }
   function langPick(t, w) { var inp = document.getElementById(w === 0 ? 'elangq' : 'olangq'); if (inp) inp.value = ''; addLang(t, w); if (inp) inp.focus(); }
+  window.langSearchInput = langSearchInput; window.langKey = langKey;
   function langKey(e, w) { if (e.key !== 'Enter') return; e.preventDefault(); var v = ((e.target && e.target.value) || '').trim(); if (!v) return; var found = null; for (var i = 0; i < LANGS.length; i++) { if (LANGS[i].toLowerCase() === v.toLowerCase()) { found = LANGS[i]; break; } } if (found) { langPick(found, w); return; } var box = document.getElementById(w === 0 ? 'elangsug' : 'olangsug'), first = box && box.querySelector('button'); if (first) langPick(first.dataset.t, w); }
   function flagOf(c) { var k = COUNTRY_CODE[c]; if (!k) return ''; return String.fromCodePoint.apply(null, k.split('').map(function (ch) { return 127397 + ch.charCodeAt(0); })); }
   function agoTxt(t) { if (!t) return ''; var d = Math.max(0, Date.now() - t), h = Math.floor(d / 3600000); if (h < 1) return 'Just now'; if (h < 24) return h + (h === 1 ? ' hour ago' : ' hours ago'); var dd = Math.floor(h / 24); return dd + (dd === 1 ? ' day ago' : ' days ago'); }
