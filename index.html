@@ -907,9 +907,12 @@ h2.t { font-family: var(--f-display); font-weight: 800; font-size: 20px; margin:
   /* ---------- main render ---------- */
   function unreadCount() { var n = 0; for (var k in S.matches) if (S.matches[k].unread) n += S.matches[k].unread; return n; }
   function likesYouList() { var want = me.g === 'm' ? 'f' : 'm'; return P.filter(function (p) { return p.g === want && S.likedMe[p.id] && !S.acted[p.id] && !S.blocked[p.id]; }); }
+  var scrollKeep = {};
   function render() {
     if (!me.done) { renderOnb(); return; }
     var keep = app.querySelector('.layer'), sh = app.querySelector('.sheet'), mt = app.querySelector('.match');
+    var scOld = app.querySelector('.scroll');
+    if (scOld) scrollKeep[S.tab] = scOld.scrollTop;
     var v = '';
     if (S.tab === 'discover') v = vDiscover(); else if (S.tab === 'explore') v = vExplore(); else if (S.tab === 'chats') v = vChats(); else if (S.tab === 'settings') v = vSettings(); else v = vMe();
     var un = unreadCount(), lk = likesYouList().length;
@@ -919,6 +922,8 @@ h2.t { font-family: var(--f-display); font-weight: 800; font-size: 20px; margin:
     app.innerHTML = '<div class="top"><div class="logo">' + logoSvg() + '<span class="topname"><span class="c1">Ham</span><span class="c2">dam</span></span></div><div><button class="icon-btn" data-act="notifs" aria-label="Notifications" style="position:relative">' + ic('bell') + (nn ? '<span style="position:absolute;top:0;inset-inline-end:0;min-width:17px;height:17px;padding:0 4px;border-radius:9px;background:var(--danger);color:var(--on-brand);font-size:11px;line-height:17px;text-align:center">' + pd(nn) + '</span>' : '') + '</button><button class="icon-btn" data-act="shareme" aria-label="Share profile">' + ic('send') + '</button><button class="icon-btn" data-act="settings" aria-label="Settings">' + ic('gear') + '</button><button class="icon-btn" data-act="theme" aria-label="Dark mode">' + ic(isDark() ? 'sun' : 'moon') + '</button>' + (S.tab === 'discover' ? fb : S.tab === 'explore' ? fb : '') + '</div></div>' +
       '<div class="view">' + v + '</div>' +
       '<nav class="tabs" aria-label="Main">' + tabs.map(function (t) { return '<button class="tab" data-act="tab" data-v="' + t[0] + '"' + ((S.tab === t[0] || (t[0] === 'me' && S.tab === 'settings')) ? ' aria-current="page"' : '') + '>' + ic(t[2]) + '<span>' + t[1] + '</span>' + (t[3] ? '<span class="dot">' + pd(t[3]) + '</span>' : '') + '</button>'; }).join('') + '</nav>';
+    var scNew = app.querySelector('.scroll');
+    if (scNew && scrollKeep[S.tab] != null) scNew.scrollTop = scrollKeep[S.tab];
     if (S.tab === 'discover') bindDeck();
     if (keep) app.appendChild(keep);
     if (sh) app.appendChild(sh);
