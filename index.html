@@ -893,11 +893,16 @@ h2.t { font-family: var(--f-display); font-weight: 800; font-size: 20px; margin:
     t.textContent = m; t.classList.add('show'); clearTimeout(tt); tt = setTimeout(function () { t.classList.remove('show'); }, 2300);
   }
   function closeSheet() { var s = app.querySelector('.sheet'); if (s) s.remove(); }
+  var sheetScroll = null;
   function sheet(html, cls) {
+    var oldPn = app.querySelector('.sheet-panel');
+    if (oldPn) { var oldH = oldPn.querySelector('h3'); sheetScroll = { key: oldH ? oldH.textContent : '', top: oldPn.scrollTop }; }
     closeSheet();
     var s = document.createElement('div'); s.className = 'sheet';
     s.innerHTML = '<div class="sheet-bg" data-act="closesheet"></div><div class="sheet-panel ' + (cls || '') + '" role="dialog" aria-modal="true" tabindex="-1"><div class="grip"></div>' + html + '</div>';
-    app.appendChild(s); var pn = s.querySelector('.sheet-panel'); pn.focus(); return s;
+    app.appendChild(s); var pn = s.querySelector('.sheet-panel'); pn.focus();
+    if (sheetScroll) { var newH = pn.querySelector('h3'); if (newH && newH.textContent === sheetScroll.key) pn.scrollTop = sheetScroll.top; }
+    return s;
   }
 
   /* ---------- dark mode ---------- */
