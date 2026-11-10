@@ -7,7 +7,7 @@
 <style>
 /* Layout: one phone-width app column (centered card on desktop). Top bar, scrolling view, bottom tabs. Sheets, chat and onboarding slide over the column. Identity: Facebook-blue system, clean white cards, heart logo kept, faceless illustrated portraits, no real photos. */
 :root {
-  --bg: linear-gradient(180deg, #DCE8FB 0%, #F0F2F5 45%, #E9F0FD 100%); --surface: rgba(255, 255, 255, 0.78); --ink: #050505; --muted: #65676B; --line: #E4E6EB;
+  --bg: linear-gradient(135deg, #B7D3F7 0%, #DCC9F7 35%, #F7C9E2 65%, #B7E3F7 100%); --surface: rgba(255, 255, 255, 0.60); --ink: #050505; --muted: #65676B; --line: #E4E6EB;
   --brand: #1877F2; --brand-hover: #166FE5; --on-brand: #FFFFFF; --accent: #0084FF; --gold: #A97F2E; --ok: #31A24C; --warn: #B7791F; --danger: #E41E3F;
   --chip: #F0F2F5; --shadow: 0 2px 12px rgba(0, 0, 0, .12); --shadow-sm: 0 1px 2px rgba(0, 0, 0, .12);
   --f-ui: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, 'Noto Sans Arabic', sans-serif;
@@ -15,13 +15,13 @@
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: linear-gradient(180deg, #1E2A44 0%, #18191A 45%, #1B2536 100%); --surface: rgba(36, 37, 38, 0.78); --ink: #E4E6EB; --muted: #B0B3B8; --line: #3E4042;
+    --bg: linear-gradient(135deg, #22385E 0%, #3D2A5E 40%, #5E2A4A 70%, #223E5E 100%); --surface: rgba(36, 37, 38, 0.62); --ink: #E4E6EB; --muted: #B0B3B8; --line: #3E4042;
     --brand: #2D88FF; --brand-hover: #4294FF; --on-brand: #FFFFFF; --accent: #0099FF; --gold: #E0BE74; --ok: #31A24C; --warn: #F5C33B; --danger: #F02849;
     --chip: #3A3B3C; --shadow: 0 2px 12px rgba(0, 0, 0, .45); --shadow-sm: 0 1px 2px rgba(0, 0, 0, .4); color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --bg: linear-gradient(180deg, #1E2A44 0%, #18191A 45%, #1B2536 100%); --surface: rgba(36, 37, 38, 0.78); --ink: #E4E6EB; --muted: #B0B3B8; --line: #3E4042;
+  --bg: linear-gradient(135deg, #22385E 0%, #3D2A5E 40%, #5E2A4A 70%, #223E5E 100%); --surface: rgba(36, 37, 38, 0.62); --ink: #E4E6EB; --muted: #B0B3B8; --line: #3E4042;
   --brand: #2D88FF; --brand-hover: #4294FF; --on-brand: #FFFFFF; --accent: #0099FF; --gold: #E0BE74; --ok: #31A24C; --warn: #F5C33B; --danger: #F02849;
   --chip: #3A3B3C; --shadow: 0 2px 12px rgba(0, 0, 0, .45); --shadow-sm: 0 1px 2px rgba(0, 0, 0, .4); color-scheme: dark;
 }
@@ -1489,7 +1489,7 @@ h2.t { font-family: var(--f-display); font-weight: 800; font-size: 20px; margin:
     var tr = activeTravel();
     var myph = (me.photos && me.photos.length) ? '<img src="' + me.photos[0] + '" alt=""' + (me.blur ? ' class="blurred"' : '') + ' style="width:100%;height:100%;object-fit:cover">' : art(mine);
     var vs = me.ver === 2 ? '<span class="vstate ok">' + ic('check') + ' Verified</span>' : me.ver === 1 ? '<span class="vstate">Under review…</span>' : '<span class="vstate">Not verified</span>';
-    var s = '<div class="scroll"><div class="meprof"><div class="ph" role="button" tabindex="0" aria-label="View my photo" data-act="viewmyphoto" style="width:110px;height:110px;cursor:pointer">' + myph + (me.ver === 2 ? '<span class="vbadge" style="position:absolute;right:0;bottom:0;border:2px solid var(--surface)">' + ic('check') + '</span>' : '') + '</div><div style="flex:1;min-width:0"><div class="pname" role="button" tabindex="0" data-act="myprofile" style="color:var(--ink);cursor:pointer">' + esc(me.name) + (me.lastName ? ' ' + esc(me.lastName) : '') + ', ' + pd(me.age) + '</div><div style="color:var(--muted)">' + (me.country ? (flagOf(me.country) ? flagOf(me.country) + ' ' : '') + esc(me.country) : '') + (tr ? ' · ✈ Travelling in ' + esc(tr.city) + ', ' + (flagOf(tr.country) ? flagOf(tr.country) + ' ' : '') + esc(tr.country) : '') + (me.job ? ' · ' + esc(me.job) : '') + '</div>' + (me.about ? '<p style="margin:8px 0 0">' + esc(me.about) + '</p>' : '') + '<div style="margin-top:6px">' + vs + '</div></div><div style="display:flex;align-content:start"><button class="btn" data-act="editme" style="background:linear-gradient(135deg,#1877F2,#E91E63);border:0;box-shadow:0 6px 18px rgba(233,30,99,.35);padding:10px 14px;font-size:15px;white-space:nowrap">✏️ Edit Profile</button></div></div>';
+    var s = '<div class="scroll"><div class="meprof"><div style="position:relative;flex:none"><div class="ph" role="button" tabindex="0" aria-label="View my photo" data-act="viewmyphoto" style="width:110px;height:110px;cursor:pointer">' + myph + '</div>' + (me.ver === 2 ? '<span class="vbadge" style="position:absolute;right:-4px;bottom:-4px;border:2px solid var(--surface);z-index:2">' + ic('check') + '</span>' : '') + '</div><div style="flex:1;min-width:0"><div class="pname" role="button" tabindex="0" data-act="myprofile" style="color:var(--ink);cursor:pointer">' + esc(me.name) + (me.lastName ? ' ' + esc(me.lastName) : '') + ', ' + pd(me.age) + '</div><div style="color:var(--muted)">' + (me.country ? (flagOf(me.country) ? flagOf(me.country) + ' ' : '') + esc(me.country) : '') + (tr ? ' · ✈ Travelling in ' + esc(tr.city) + ', ' + (flagOf(tr.country) ? flagOf(tr.country) + ' ' : '') + esc(tr.country) : '') + (me.job ? ' · ' + esc(me.job) : '') + '</div>' + (me.about ? '<p style="margin:8px 0 0">' + esc(me.about) + '</p>' : '') + '<div style="margin-top:6px">' + vs + '</div></div><div style="display:flex;align-content:start"><button class="btn" data-act="editme" style="background:linear-gradient(135deg,#1877F2,#E91E63);border:0;box-shadow:0 6px 18px rgba(233,30,99,.35);padding:10px 14px;font-size:15px;white-space:nowrap">✏️ Edit Profile</button></div></div>';
     s += profileCompleteHTML();
     if (me.ver !== 2) s += '<button class="btn block" style="margin-top:12px" data-act="verify" ' + (me.ver === 1 ? 'disabled' : '') + '>' + ic('shield') + ' Verify your profile</button>';
     
