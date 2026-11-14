@@ -2094,7 +2094,6 @@ h2.t { font-family: var(--f-display); font-weight: 800; font-size: 20px; margin:
       case 'open': openProfile(id); break;       case 'viewphoto': photoViewer(id, 0); break;       case 'viewmyphoto': viewMyPhoto(+(b.dataset.i || 0)); break;       case 'myphprev': viewMyPhoto((v || 0) - 1); break;       case 'myphnext': viewMyPhoto((v || 0) + 1); break;       case 'myprofile': myProfile(); break;       case 'myproftab': S.myProfTab = v; myProfile(); break;       case 'voiceintro': toast('Voice intro is coming soon'); break;       case 'phprev': photoViewer(id, (v || 0) - 1); break;       case 'phnext': photoViewer(id, (v || 0) + 1); break;       case 'phclose': var pvEl = app.querySelector('.phview'); if (pvEl) pvEl.remove(); break;
       case 'closesheet': closeSheet(); break;
       case 'filters': filtersSheet(); break;
-      case 'goldfilters': filtersSheet(); break;
       case 'revealfilters': if (!me.gold) { goldSheet(); break; } revealSheet(id); break;
       case 'compliment': complimentSheet(id); break;
       case 'complimentpick': { var ci = document.getElementById('comptxt'); if (ci) ci.value = b.dataset.t; break; }
@@ -2179,7 +2178,6 @@ h2.t { font-family: var(--f-display); font-weight: 800; font-size: 20px; margin:
       case 'ofplan': me.familyPlans = v; renderOnb(); break;
       case 'opoly': me.polygamy = v; renderOnb(); break;
       case 'ofaith': me.faith = me.faith || []; var i3 = me.faith.indexOf(b.dataset.t); if (i3 > -1) me.faith.splice(i3, 1); else if (me.faith.length >= 3) { toast('You can choose up to 3'); break; } else me.faith.push(b.dataset.t); b.setAttribute('aria-pressed', i3 === -1); break;
-      case 'olang': var lg = (me.langs || '').split(/,/).map(function (x) { return x.trim(); }).filter(Boolean); var i4 = lg.indexOf(b.dataset.t); if (i4 > -1) lg.splice(i4, 1); else lg.push(b.dataset.t); me.langs = lg.join(', '); b.setAttribute('aria-pressed', i4 === -1); break;
       case 'opers': me.personality = me.personality || []; var i5 = me.personality.indexOf(b.dataset.t); if (i5 > -1) me.personality.splice(i5, 1); else if (me.personality.length >= 3) { toast('You can choose up to 3'); break; } else me.personality.push(b.dataset.t); b.setAttribute('aria-pressed', i5 === -1); break;
       case 'delonbph': me.photos.splice(+b.dataset.i, 1); saveMe(); renderOnb(); toast('Photo deleted'); break; case 'mainonbph': { var mj = +b.dataset.i; if (mj > 0 && mj < me.photos.length) { var mv = me.photos.splice(mj, 1)[0]; me.photos.unshift(mv); saveMe(); } renderOnb(); toast('Main photo updated'); break; }
       case 'otag': var i2 = me.int.indexOf(b.dataset.t); if (i2 > -1) me.int.splice(i2, 1); else if (me.int.length >= 3) { toast('You can choose up to 3 interests'); break; } else me.int.push(b.dataset.t); b.setAttribute('aria-pressed', i2 === -1); break;
